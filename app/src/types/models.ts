@@ -16,6 +16,18 @@ export interface Place {
   rating: number;
 }
 
+export interface PlanDay {
+  date: string;
+  startHour: string;
+  endHour: string;
+  meals: {
+    breakfast: boolean;
+    launch: boolean;
+    dinner: boolean;
+    supper: boolean;
+  };
+}
+
 export interface TourDay {
   places: Place[];
   date: string;
