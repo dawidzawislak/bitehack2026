@@ -6,6 +6,7 @@ import type {
   Location,
   PlanDay,
   TourDay,
+  DaySchedule,
 } from "../types/models";
 
 export function RouteProvider({ children }: { children: ReactNode }) {
@@ -17,6 +18,7 @@ export function RouteProvider({ children }: { children: ReactNode }) {
   const [placeCategories, setPlaceCategories] = useState<PlaceCategory[]>([]);
   const [cuisineTypes, setCuisineTypes] = useState<CuisineType[]>([]);
   const [tourDays, setTourDays] = useState<TourDay[]>([]);
+  const [schedule, setSchedule] = useState<DaySchedule[]>([]);
 
   return (
     <RouteContext.Provider
@@ -31,6 +33,8 @@ export function RouteProvider({ children }: { children: ReactNode }) {
         setCuisineTypes,
         tourDays,
         setTourDays,
+        schedule,
+        setSchedule,
       }}
     >
       {children}

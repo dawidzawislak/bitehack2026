@@ -83,6 +83,8 @@ class TimelineItem(BaseModel):
 class DaySchedule(BaseModel):
     """Schedule for a single day."""
     date: str = Field(..., description="Date in YYYY-MM-DD format")
+    start_location: Location = Field(..., description="Starting location for this day")
+    end_location: Location = Field(..., description="Ending location for this day (usually home)")
     timeline: List[TimelineItem] = Field(..., description="Chronological timeline of attractions and meals")
     total_attractions: int = Field(..., description="Number of attractions in this day")
     total_meals: int = Field(..., description="Number of meals in this day")
