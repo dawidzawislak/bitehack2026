@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Plan from "./pages/Plan";
 import NewDay from "./pages/NewDay";
+import Schedule from "./pages/Schedule";
 import Header from "./components/Header";
 import ChooseCategories from "./pages/ChooseCategories";
 
@@ -19,7 +20,7 @@ export default function App() {
               <Route path="/plan" element={<Plan />} />
               <Route path="/new-day/:id" element={<NewDay />} />
               <Route path="/categories" element={<ChooseCategories />} />
-              <Route path="/schedule" element={<></>} />
+              <Route path="/schedule" element={<Schedule />} />
               {/* <Route path="/map" element={<MapComponent />} /> */}
               <Route path="/details/:id" element={<></>} />
             </Routes>

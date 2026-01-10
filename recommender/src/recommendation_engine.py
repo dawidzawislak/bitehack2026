@@ -519,6 +519,8 @@ class RecommendationEngine:
             # Create day schedule
             day_schedule = DaySchedule(
                 date=current_date.strftime("%Y-%m-%d"),
+                start_location=start_location,
+                end_location=end_location,
                 timeline=timeline,
                 total_attractions=total_attractions,
                 total_meals=total_meals
