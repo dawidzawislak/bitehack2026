@@ -1,4 +1,31 @@
 services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: places_db
+    restart: unless-stopped
+
+  recommender:
+    build:
+      context: ./recommender
+      dockerfile: Dockerfile
+    container_name: recommender
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./recommender:/app
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=places_db
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
   api:
     build: .
     container_name: fastapi_app
@@ -8,4 +35,11 @@ services:
       - ./api:/api/api
     env_file:
       - .env
+    environment:
+      - RECOMMENDER_URL=http://recommender:8001
+    depends_on:
+      - recommender
     restart: unless-stopped
+
+volumes:
+  mongodb_data:
