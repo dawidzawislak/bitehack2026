@@ -22,7 +22,7 @@ export interface PlanDay {
   endHour: string;
   meals: {
     breakfast: boolean;
-    launch: boolean;
+    lunch: boolean;
     dinner: boolean;
     supper: boolean;
   };
