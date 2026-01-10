@@ -27,10 +27,14 @@ export default function ChooseCategories() {
       .then((res) => res.json())
       .then((data) => {
         setAvailableCuisineTypes(
-          data.food_categories
-            .map((cat: string) => cat.split("."))
-            .filter((cat) => cat.length > 1)
-            .map((cat) => cat[cat.length - 1])
+          Array.from(
+            new Set(
+              data.food_categories
+                .map((cat: string) => cat.split("."))
+                .filter((cat) => cat.length > 1)
+                .map((cat) => cat[cat.length - 1])
+            )
+          )
         );
       });
   }, []);

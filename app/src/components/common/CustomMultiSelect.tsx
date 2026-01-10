@@ -83,7 +83,6 @@ const CustomMultiSelect: React.FC<CustomMultiSelectProps> = ({
           setSearch("");
           break;
         case "Backspace":
-          console.log("BSCP", search === "" && value.length > 0);
           if (search === "" && value.length > 0) {
             onChange(value.slice(0, -1));
           }
