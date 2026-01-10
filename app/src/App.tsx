@@ -1,9 +1,26 @@
+import { RouteProvider } from "./context/RouteProvider";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-200">
-      <h1 className="text-4xl font-bold text-blue-400">
-        Tailwind is working 🚀
-      </h1>
-    </div>
+    <RouteProvider>
+      <Router>
+        {/* <div className="h-screen bg-purple-50 relative overflow-auto">
+          <Header />
+          <Sidebar /> */}
+        <main>
+          <Routes>
+            <Route path="/" element={<></>} />
+            <Route path="/home" element={<></>} />
+            <Route path="/plan" element={<></>} />
+            <Route path="/categories" element={<></>} />
+            <Route path="/schedule" element={<></>} />
+            <Route path="/map" element={<></>} />
+            <Route path="/details/:id" element={<></>} />
+          </Routes>
+        </main>
+        {/* </div> */}
+      </Router>
+    </RouteProvider>
   );
 }
