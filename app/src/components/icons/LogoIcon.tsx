@@ -1,9 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
+import type { FC, SVGProps } from 'react'
 
-<svg
-   width="600"
-   height="150"
+interface LogoIconProps extends SVGProps<SVGSVGElement> {
+  size?: number
+}
+
+const LogoIcon: FC<LogoIconProps> = ({ size = 600, ...props }) => {
+  return (
+    <svg
+    width={size}
+    height={size*0.25}
    viewBox="0 0 158.75 39.6875"
    version="1.1"
    id="svg1"
@@ -14,7 +19,10 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+   xmlns:svg="http://www.w3.org/2000/svg"
+   {...props}>
+    
+  <sodipodi:namedview
      id="namedview1"
      pagecolor="#ffffff"
      bordercolor="#000000"
@@ -151,3 +159,7 @@
        id="use16"
        transform="translate(78.010425,-16.463886)"
        inkscape:label="pin" /></g></svg>
+  )
+}
+
+export default LogoIcon
