@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API } from "../utils/api";
 import TimelineItem from "../components/TimelineItem";
 import { Heading, Section, Button } from "../components/common";
@@ -8,6 +9,7 @@ import type { DaySchedule } from "../types/models";
 
 export default function Schedule() {
   const { schedule, setSchedule } = useRouteCtx();
+  const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -202,10 +204,7 @@ export default function Schedule() {
         {/* Map button */}
         <div className="p-6">
           <Button
-            onClick={() => {
-              // TODO: Navigate to map with route points
-              console.log("Navigate to map with points:", currentDaySchedule);
-            }}
+            onClick={() => navigate('/map')}
             variant="primary"
             fullWidth
           >
