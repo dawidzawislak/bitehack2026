@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Plan from "./pages/Plan";
 import NewDay from "./pages/NewDay";
 import Header from "./components/Header";
+import ChooseCategories from "./pages/ChooseCategories";
 
 export default function App() {
   return (
@@ -17,7 +18,7 @@ export default function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/new-day/:id" element={<NewDay />} />
-              <Route path="/categories" element={<></>} />
+              <Route path="/categories" element={<ChooseCategories />} />
               <Route path="/schedule" element={<></>} />
               {/* <Route path="/map" element={<MapComponent />} /> */}
               <Route path="/details/:id" element={<></>} />

@@ -1,7 +1,3 @@
-export type PlaceCategory = "cat1" | "cat2" | "cat3";
-
-export type CuisineType = "type1" | "type2" | "type3";
-
 export interface Location {
   latitude: number;
   longitude: number;
@@ -10,8 +6,8 @@ export interface Location {
 export interface Place {
   id: string;
   name: string;
-  category: PlaceCategory;
-  cuisine: CuisineType;
+  category: string;
+  cuisine: string;
   location: Location;
   rating: number;
 }

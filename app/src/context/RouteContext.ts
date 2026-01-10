@@ -1,21 +1,15 @@
 import { createContext } from "react";
-import type {
-  CuisineType,
-  Location,
-  PlaceCategory,
-  PlanDay,
-  TourDay,
-} from "../types/models";
+import type { Location, PlanDay, TourDay } from "../types/models";
 
 export interface RouteContextType {
   homeLocation: Location;
   planDays: PlanDay[];
-  placeCategories: PlaceCategory[];
-  cuisineTypes: CuisineType[];
+  placeCategories: string[];
+  cuisineTypes: string[];
   setHomeLocation: (location: Location) => void;
   setPlanDays: (planDays: PlanDay[]) => void;
-  setPlaceCategories: (placeCategories: PlaceCategory[]) => void;
-  setCuisineTypes: (cuisineTypes: CuisineType[]) => void;
+  setPlaceCategories: (placeCategories: string[]) => void;
+  setCuisineTypes: (cuisineTypes: string[]) => void;
   tourDays: TourDay[];
   setTourDays: (tourDays: TourDay[]) => void;
 }

@@ -12,7 +12,9 @@ export default function Plan() {
       header="Tour time"
       sidebar={true}
       buttonNext="Next"
-      buttonNextAction={() => {}}
+      buttonNextAction={() => navigate("/categories")}
+      buttonBack="Back"
+      buttonBackAction={() => navigate("/home")}
     >
       <div className="flex flex-col gap-4">
         {planDays.map((plan, index) => (

@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useRouteCtx } from '../hooks/useRouteCtx';
 import Button from '../components/common/Button';
+import Content from '../components/common/Content';
 
 // Fix for default marker icon in Leaflet
 // @ts-expect-error - TS might complain about missing properties on prototype or the delete operator
@@ -121,34 +122,16 @@ export default function Home() {
   };
 
   return (
-    <div className="relative h-full">
+    <Content
+      header="Choose your apartment location"
+      sidebar={true}
+      buttonNext="Continue planning"
+      buttonBack="Set current location"
+      buttonNextAction={handleContinue}
+      buttonBackAction={handleUseDeviceLocation}
+      buttonNextDisabled={homeLocation.latitude === 0 && homeLocation.longitude === 0}
+    >
       <div id="home-map" className="h-full w-full"></div>
-      
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-2 z-[1000] max-w-xs">
-        <h2 className="text-sm font-bold mb-1">Choose your apartment location</h2>
-        <p className="text-xs text-gray-600 mb-1">
-          Click on the map to mark your apartment location
-        </p>
-        <Button
-          onClick={handleUseDeviceLocation}
-          variant="secondary"
-          fullWidth
-          className="text-xs"
-        >
-          📍 Use my current location
-        </Button>
-      </div>
-
-      {homeLocation.latitude !== 0 && homeLocation.longitude !== 0 && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000]">
-          <Button
-            onClick={handleContinue}
-            variant="primary"
-          >
-            Continue planning
-          </Button>
-        </div>
-      )}
-    </div>
+    </Content>
   );
 }
