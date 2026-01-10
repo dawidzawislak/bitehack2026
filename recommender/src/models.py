@@ -12,18 +12,22 @@ class Location(BaseModel):
     lng: float = Field(..., description="Longitude")
 
 
-class MealRequest(BaseModel):
-    """Meal preference in the request."""
-    type: str = Field(..., description="Meal type: breakfast, lunch, dinner, supper")
-    preferred_time: str = Field(..., description="Preferred time in HH:MM format")
+class DayRequest(BaseModel):
+    """Configuration for a single day of the trip."""
+    date: str = Field(..., description="Date in YYYY-MM-DD format")
+    start_time: str = Field(..., description="Trip start time for this day in HH:MM format")
+    end_time: str = Field(..., description="Trip end time for this day in HH:MM format")
+    meals: List[str] = Field(
+        default=[],
+        description="List of meal types for this day: breakfast, lunch, dinner, supper"
+    )
 
 
 class RecommendRequest(BaseModel):
     """Request model for recommendations."""
-    start_datetime: datetime = Field(..., description="Trip start date and time")
-    end_datetime: datetime = Field(..., description="Trip end date and time")
     start_location: Location = Field(..., description="Starting location coordinates")
     end_location: Location = Field(..., description="Ending location coordinates")
+    days: List[DayRequest] = Field(..., description="Configuration for each day of the trip")
     preferred_categories: List[str] = Field(
         default=[],
         description="Preferred place categories (e.g., 'history', 'architecture', 'art')"
@@ -31,10 +35,6 @@ class RecommendRequest(BaseModel):
     food_preferences: List[str] = Field(
         default=[],
         description="Preferred food categories (e.g., 'catering.restaurant.italian', 'catering.cafe')"
-    )
-    meals: List[MealRequest] = Field(
-        default=[],
-        description="Meal preferences for each day"
     )
 
 

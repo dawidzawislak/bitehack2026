@@ -6,16 +6,58 @@ from datetime import datetime, timedelta, time
 from haversine import haversine, Unit
 from pymongo.database import Database
 
-from src.models import Location, MealRequest, Place, Restaurant, DaySchedule, TimelineItem
+from src.models import Location, DayRequest, Place, Restaurant, DaySchedule, TimelineItem
 from src.opening_hours_parser import OpeningHoursParser, calculate_travel_time
 
 
 class RecommendationEngine:
     """Engine for generating place recommendations."""
     
+    # Meal time windows
+    MEAL_TIME_WINDOWS = {
+        "breakfast": (time(8, 0), time(10, 0)),
+        "lunch": (time(12, 0), time(14, 0)),
+        "dinner": (time(16, 0), time(18, 0)),
+        "supper": (time(20, 0), time(22, 0))
+    }
+    
     def __init__(self, db: Database):
         self.db = db
         self.parser = OpeningHoursParser()
+    
+    def validate_and_adjust_meal_time(
+        self,
+        meal_type: str,
+        day_start: time,
+        day_end: time,
+        current_date: datetime.date
+    ) -> Optional[datetime]:
+        """
+        Validate and adjust meal time to fit within day boundaries.
+        
+        Returns:
+            datetime for the meal or None if meal doesn't fit
+        """
+        if meal_type not in self.MEAL_TIME_WINDOWS:
+            return None
+        
+        window_start, window_end = self.MEAL_TIME_WINDOWS[meal_type]
+        
+        # Check if meal window overlaps with day schedule
+        if window_end < day_start or window_start > day_end:
+            return None  # Meal window completely outside day schedule
+        
+        # Adjust meal time to fit within day boundaries
+        meal_start = max(window_start, day_start)
+        meal_start = min(meal_start, day_end)
+        
+        # Check if we have at least 30 minutes for the meal
+        meal_end_limit = min(window_end, day_end)
+        if (datetime.combine(current_date, meal_end_limit) - 
+            datetime.combine(current_date, meal_start)).total_seconds() / 60 < 30:
+            return None  # Not enough time for meal
+        
+        return datetime.combine(current_date, meal_start)
     
     def calculate_distance(self, loc1: Location, loc2: Dict[str, float]) -> float:
         """Calculate distance between two locations in kilometers."""
@@ -283,13 +325,11 @@ class RecommendationEngine:
     
     def generate_recommendations(
         self,
-        start_datetime: datetime,
-        end_datetime: datetime,
         start_location: Location,
         end_location: Location,
+        days: List[DayRequest],
         preferred_categories: List[str],
-        food_preferences: List[str],
-        meals: List[MealRequest]
+        food_preferences: List[str]
     ) -> List[DaySchedule]:
         """
         Generate complete recommendation schedule with chronological timeline.
@@ -300,16 +340,16 @@ class RecommendationEngine:
         schedule = []
         visited_ids: Set[str] = set()
         
-        # Calculate number of days
-        current_date = start_datetime.date()
-        end_date = end_datetime.date()
-        
-        # Daily schedule: 9:00 - 21:00 (12 hours = 720 minutes)
-        daily_start_time = time(9, 0)
-        daily_end_time = time(21, 0)
-        
-        while current_date <= end_date:
-            day_datetime = datetime.combine(current_date, daily_start_time)
+        for day_request in days:
+            # Parse date and times
+            try:
+                current_date = datetime.strptime(day_request.date, "%Y-%m-%d").date()
+                day_start_time = datetime.strptime(day_request.start_time, "%H:%M").time()
+                day_end_time = datetime.strptime(day_request.end_time, "%H:%M").time()
+            except ValueError:
+                continue  # Skip invalid date/time format
+            
+            day_datetime = datetime.combine(current_date, day_start_time)
             
             # Get candidate places for this day
             candidates = self.get_candidate_places(
@@ -322,19 +362,17 @@ class RecommendationEngine:
             
             # Build chronological timeline for the day
             timeline = []
-            current_time = datetime.combine(current_date, daily_start_time)
-            end_of_day = datetime.combine(current_date, daily_end_time)
+            current_time = datetime.combine(current_date, day_start_time)
+            end_of_day = datetime.combine(current_date, day_end_time)
             
-            # Sort meals by preferred time for this day
+            # Validate and schedule meals for this day
             day_meals = []
-            for meal in meals:
-                try:
-                    hour, minute = map(int, meal.preferred_time.split(':'))
-                    meal_time = datetime.combine(current_date, time(hour, minute))
-                    if daily_start_time <= meal_time.time() <= daily_end_time:
-                        day_meals.append((meal_time, meal))
-                except:
-                    continue
+            for meal_type in day_request.meals:
+                meal_time = self.validate_and_adjust_meal_time(
+                    meal_type, day_start_time, day_end_time, current_date
+                )
+                if meal_time:
+                    day_meals.append((meal_time, meal_type))
             
             day_meals.sort(key=lambda x: x[0])  # Sort by time
             
@@ -346,14 +384,14 @@ class RecommendationEngine:
             while current_time < end_of_day:
                 # Check if it's time for a meal
                 if next_meal_idx < len(day_meals):
-                    meal_time, meal = day_meals[next_meal_idx]
+                    meal_time, meal_type = day_meals[next_meal_idx]
                     
                     # If current time is close to meal time (within 30 min), insert meal
                     if current_time >= meal_time - timedelta(minutes=30):
                         # Get restaurant suggestion
                         restaurant_tuples = self.get_restaurant_suggestions(
                             location=start_location,
-                            meal_type=meal.type,
+                            meal_type=meal_type,
                             meal_time=meal_time,
                             visited_ids=visited_ids,
                             food_preferences=food_preferences,
@@ -385,7 +423,7 @@ class RecommendationEngine:
                                 travel_time_min=travel_time,
                                 formatted_address=rest_dict.get("formatted_address"),
                                 price_level=rest_dict.get("price_level"),
-                                meal_type=meal.type
+                                meal_type=meal_type
                             )
                             
                             # Add meal to timeline
@@ -487,8 +525,5 @@ class RecommendationEngine:
             )
             
             schedule.append(day_schedule)
-            
-            # Move to next day
-            current_date += timedelta(days=1)
         
         return schedule

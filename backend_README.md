@@ -56,15 +56,23 @@ Example recommendation request:
 curl -X POST http://localhost:8000/api/recommend \
   -H "Content-Type: application/json" \
   -d '{
-    "start_datetime": "2026-01-15T09:00:00",
-    "end_datetime": "2026-01-16T21:00:00",
     "start_location": {"lat": 50.0647, "lng": 19.9450},
     "end_location": {"lat": 50.0647, "lng": 19.9450},
     "preferred_categories": ["history", "architecture"],
     "food_preferences": ["catering.restaurant.italian", "catering.cafe"],
-    "meals": [
-      {"type": "lunch", "preferred_time": "13:00"},
-      {"type": "dinner", "preferred_time": "19:00"}
+    "days": [
+      {
+        "date": "2026-01-15",
+        "start_time": "09:00",
+        "end_time": "21:00",
+        "meals": ["breakfast", "lunch", "dinner"]
+      },
+      {
+        "date": "2026-01-16",
+        "start_time": "10:00",
+        "end_time": "18:00",
+        "meals": ["lunch", "dinner"]
+      }
     ]
   }'
 ```
@@ -98,8 +106,6 @@ Main backend that proxies to recommender:
 
 ```json
 {
-  "start_datetime": "2026-01-15T09:00:00",
-  "end_datetime": "2026-01-17T21:00:00",
   "start_location": {
     "lat": 50.0647,
     "lng": 19.9450
@@ -114,22 +120,45 @@ Main backend that proxies to recommender:
     "catering.restaurant.regional",
     "catering.cafe"
   ],
-  "meals": [
+  "days": [
     {
-      "type": "breakfast",
-      "preferred_time": "08:00"
+      "date": "2026-01-15",
+      "start_time": "09:00",
+      "end_time": "21:00",
+      "meals": ["breakfast", "lunch", "dinner"]
     },
     {
-      "type": "lunch",
-      "preferred_time": "13:00"
+      "date": "2026-01-16",
+      "start_time": "10:00",
+      "end_time": "18:00",
+      "meals": ["lunch", "dinner"]
     },
     {
-      "type": "dinner",
-      "preferred_time": "19:00"
+      "date": "2026-01-17",
+      "start_time": "09:30",
+      "end_time": "20:00",
+      "meals": ["breakfast", "lunch", "supper"]
     }
   ]
 }
 ```
+
+**Parameters:**
+- `start_location`, `end_location`: Starting and ending coordinates for route planning
+- `preferred_categories`: List of place categories to prioritize (e.g., "history", "architecture")
+- `food_preferences`: List of food venue types from geoapify_categories (e.g., "catering.restaurant.italian")
+- `days`: Array of daily schedules, each containing:
+  - `date`: Date in YYYY-MM-DD format
+  - `start_time`: Start of trip in HH:MM format (e.g., "09:00")
+  - `end_time`: End of trip in HH:MM format (e.g., "21:00")
+  - `meals`: Array of meal types for the day, valid values: `["breakfast", "lunch", "dinner", "supper"]`
+
+**Meal Time Windows:**
+Meals are scheduled within these time windows (validated and adjusted to fit within each day's start/end times):
+- `breakfast`: 08:00 - 10:00
+- `lunch`: 12:00 - 14:00
+- `dinner`: 16:00 - 18:00
+- `supper`: 20:00 - 22:00
 
 ### Response Format
 
@@ -138,39 +167,51 @@ Main backend that proxies to recommender:
   "schedule": [
     {
       "date": "2026-01-15",
-      "attractions": [
+      "timeline": [
         {
-          "id": "place_id",
-          "name": "Wawel Castle",
-          "location": {"lat": 50.0543, "lng": 19.9356},
-          "category": ["history", "architecture"],
-          "popularity": 10,
-          "visit_duration_min": 105,
-          "distance_km": 1.2,
-          "opening_hours": "Mo-Su 09:00-17:00",
-          "travel_time_min": 18,
-          "formatted_address": "Wawel 5, 31-001 Kraków",
-          "geoapify_categories": ["tourism.attraction"],
-          "price_level": 2
+          "item_type": "attraction",
+          "scheduled_time": "09:00",
+          "end_time": "10:45",
+          "place": {
+            "id": "place_id",
+            "name": "Wawel Castle",
+            "location": {"lat": 50.0543, "lng": 19.9356},
+            "category": ["history", "architecture"],
+            "popularity": 10,
+            "visit_duration_min": 105,
+            "distance_km": 1.2,
+            "opening_hours": "Mo-Su 09:00-17:00",
+            "travel_time_min": 18,
+            "formatted_address": "Wawel 5, 31-001 Kraków",
+            "geoapify_categories": ["tourism.attraction"],
+            "price_level": 2
+          },
+          "restaurant": null
+        },
+        {
+          "item_type": "meal",
+          "scheduled_time": "13:00",
+          "end_time": "14:15",
+          "place": null,
+          "restaurant": {
+            "id": "restaurant_id",
+            "name": "Restaurant Name",
+            "location": {"lat": 50.0647, "lng": 19.9450},
+            "category": ["food"],
+            "geoapify_categories": ["catering.restaurant.regional"],
+            "popularity": 7,
+            "visit_duration_min": 75,
+            "distance_km": 0.5,
+            "opening_hours": "Mo-Su 12:00-22:00",
+            "travel_time_min": 8,
+            "formatted_address": "Main Square 10, Kraków",
+            "price_level": 2,
+            "meal_type": "lunch"
+          }
         }
       ],
-      "meal_suggestions": [
-        {
-          "id": "restaurant_id",
-          "name": "Restaurant Name",
-          "location": {"lat": 50.0647, "lng": 19.9450},
-          "category": ["food"],
-          "geoapify_categories": ["catering.restaurant.regional"],
-          "popularity": 7,
-          "visit_duration_min": 75,
-          "distance_km": 0.5,
-          "opening_hours": "Mo-Su 12:00-22:00",
-          "travel_time_min": 8,
-          "formatted_address": "Main Square 10, Kraków",
-          "price_level": 2,
-          "meal_type": "lunch"
-        }
-      ]
+      "total_attractions": 5,
+      "total_meals": 3
     }
   ],
   "total_days": 3,
@@ -207,10 +248,16 @@ base_score = (popularity * 2) - (distance_km * 1)
 
 ### Time Allocation
 
-- **Daily Hours:** 9:00 - 21:00 (12 hours)
 - **Walking Speed:** 15 minutes per kilometer
 - **Visit Time:** Parsed from `avg_visit_time` field (e.g., "60-90 min" → 75 min)
 - **Meal Time:** ~90 minutes per meal
+- **Meal Time Windows:**
+  - Breakfast: 08:00 - 10:00
+  - Lunch: 12:00 - 14:00
+  - Dinner: 16:00 - 18:00
+  - Supper: 20:00 - 22:00
+- **Daily Hours:** User-defined per day (e.g., "09:00" to "21:00")
+- **Meal Validation:** Meals are validated to fit within day boundaries and time windows (minimum 30 minutes required)
 
 ### Features
 
