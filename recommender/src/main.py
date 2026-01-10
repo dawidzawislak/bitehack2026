@@ -7,8 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 from contextlib import asynccontextmanager
 
-from models import RecommendRequest, RecommendResponse, DaySchedule
-from recommendation_engine import RecommendationEngine
+from src.models import RecommendRequest, RecommendResponse, DaySchedule
+from src.recommendation_engine import RecommendationEngine
 
 
 # Global database client
@@ -121,7 +121,8 @@ def get_recommendations(request: RecommendRequest):
         )
         
         # Calculate totals
-        total_attractions = sum(len(day.attractions) for day in schedule)
+        total_attractions = sum(day.total_attractions for day in schedule)
+        total_meals = sum(day.total_meals for day in schedule)
         
         return RecommendResponse(
             schedule=schedule,

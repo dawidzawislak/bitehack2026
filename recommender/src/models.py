@@ -67,11 +67,21 @@ class Restaurant(BaseModel):
     meal_type: str = Field(..., description="breakfast, lunch, dinner, or supper")
 
 
+class TimelineItem(BaseModel):
+    """Single item in the daily timeline."""
+    item_type: str = Field(..., description="Type: 'attraction' or 'meal'")
+    scheduled_time: str = Field(..., description="Scheduled time in HH:MM format")
+    end_time: str = Field(..., description="Expected end time in HH:MM format")
+    place: Optional[Place] = Field(None, description="Place details if item_type is 'attraction'")
+    restaurant: Optional[Restaurant] = Field(None, description="Restaurant details if item_type is 'meal'")
+
+
 class DaySchedule(BaseModel):
     """Schedule for a single day."""
     date: str = Field(..., description="Date in YYYY-MM-DD format")
-    attractions: List[Place] = Field(..., description="Recommended attractions for this day")
-    meal_suggestions: List[Restaurant] = Field(..., description="Restaurant suggestions for meals")
+    timeline: List[TimelineItem] = Field(..., description="Chronological timeline of attractions and meals")
+    total_attractions: int = Field(..., description="Number of attractions in this day")
+    total_meals: int = Field(..., description="Number of meals in this day")
 
 
 class RecommendResponse(BaseModel):
