@@ -1,36 +1,67 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Content from "../components/common/Content";
 import { useRouteCtx } from "../hooks/useRouteCtx";
+import type { PlanDay } from "../types/models";
 
 export default function NewDay() {
-  const { setPlanDays } = useRouteCtx();
+  const { setPlanDays, planDays } = useRouteCtx();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    date: "",
-    startHour: "",
-    endHour: "",
-    meals: {
-      breakfast: false,
-      lunch: false,
-      dinner: false,
-      supper: false,
-    },
-  });
+  // Compute initial form data based on id parameter
+  const initialFormData = useMemo(() => {
+    if (id && id !== "new") {
+      const dayIndex = parseInt(id);
+      if (!isNaN(dayIndex) && dayIndex >= 0 && dayIndex < planDays.length) {
+        return planDays[dayIndex];
+      }
+    }
+    return {
+      date: "",
+      startHour: "",
+      endHour: "",
+      meals: {
+        breakfast: false,
+        lunch: false,
+        dinner: false,
+        supper: false,
+      },
+    };
+  }, [id, planDays]);
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
   };
 
-  const addDay = () => {
-    // Logic to add the new day plan
+  const saveDay = () => {
+    if (id === "new" || !id) {
+      // Add new day
+      setPlanDays([...planDays, formData as PlanDay]);
+    } else {
+      // Edit existing day
+      const dayIndex = parseInt(id);
+      if (!isNaN(dayIndex) && dayIndex >= 0 && dayIndex < planDays.length) {
+        const updatedPlanDays = [...planDays];
+        updatedPlanDays[dayIndex] = formData as PlanDay;
+        setPlanDays(updatedPlanDays);
+      }
+    }
+    navigate("/plan");
   };
+
+  const isEditing = id && id !== "new";
 
   return (
     <Content
-      header="New day plan"
+      header={isEditing ? "Edit day plan" : "New day plan"}
       sidebar={true}
-      button1="Add"
-      button1action={addDay}
+      buttonNext={isEditing ? "Save" : "Add"}
+      buttonNextAction={saveDay}
+      buttonBack="Back"
+      buttonBackAction={() => navigate("/plan")}
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div>

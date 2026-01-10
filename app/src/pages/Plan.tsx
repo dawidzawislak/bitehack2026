@@ -1,44 +1,35 @@
-import { Heading, Section } from "../components/common";
+import { useNavigate } from "react-router-dom";
+import Content from "../components/common/Content";
 import PlanDayCard from "../components/PlanDayCard";
+import { useRouteCtx } from "../hooks/useRouteCtx";
 
 export default function Plan() {
+  const { planDays } = useRouteCtx();
+  const navigate = useNavigate();
+
   return (
-    <Section>
-      <Heading level={1}>Tour Time</Heading>
-      <hr className="my-4" />
+    <Content
+      header="Tour time"
+      sidebar={true}
+      buttonNext="Next"
+      buttonNextAction={() => {}}
+    >
       <div className="flex flex-col gap-4">
-        <PlanDayCard
-          i={1}
-          plan={{
-            date: "2024-06-01",
-            startHour: "09:00",
-            endHour: "17:00",
-            meals: {
-              breakfast: true,
-              lunch: false,
-              dinner: false,
-              supper: true,
-            },
-          }}
-        />
-        <PlanDayCard
-          i={2}
-          plan={{
-            date: "2024-06-02",
-            startHour: "10:00",
-            endHour: "16:00",
-            meals: {
-              breakfast: false,
-              lunch: true,
-              dinner: true,
-              supper: false,
-            },
-          }}
-        />
-        <button className="border border-orange-200 rounded-xl overflow-hidden flex relative text-7xl flex justify-center shadow-md hover:bg-orange-50 hover:shadow-lg">
+        {planDays.map((plan, index) => (
+          <PlanDayCard
+            key={index}
+            i={index + 1}
+            plan={plan}
+            onClick={() => navigate(`/new-day/${index}`)}
+          />
+        ))}
+        <button
+          className="w-full border border-orange-200 rounded-xl overflow-hidden flex relative text-7xl flex justify-center shadow-md hover:bg-orange-50 hover:shadow-lg"
+          onClick={() => navigate("/new-day/new")}
+        >
           +
         </button>
       </div>
-    </Section>
+    </Content>
   );
 }

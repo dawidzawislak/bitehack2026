@@ -6,18 +6,18 @@ export default function Content({
   header,
   children,
   sidebar,
-  button1,
-  button2,
-  button1action,
-  button2action,
+  buttonNext,
+  buttonBack,
+  buttonNextAction,
+  buttonBackAction,
 }: {
   header: string;
   children: ReactNode;
   sidebar: boolean;
-  button1?: string;
-  button2?: string;
-  button1action?: () => void;
-  button2action?: () => void;
+  buttonNext?: string;
+  buttonBack?: string;
+  buttonNextAction?: () => void;
+  buttonBackAction?: () => void;
 }) {
   return (
     <div className="flex h-full">
@@ -26,14 +26,19 @@ export default function Content({
         <hr className="my-4" />
         <div className="flex-grow overflow-y-auto">{children}</div>
         <div className="flex gap-4">
-          {button1 && (
-            <Button fullWidth className="mt-4" onClick={button1action}>
-              {button1}
+          {buttonBack && (
+            <Button
+              fullWidth
+              className="mt-4"
+              onClick={buttonBackAction}
+              variant="secondary"
+            >
+              {buttonBack}
             </Button>
           )}
-          {button2 && (
-            <Button fullWidth className="mt-4" onClick={button2action}>
-              {button2}
+          {buttonNext && (
+            <Button fullWidth className="mt-4" onClick={buttonNextAction}>
+              {buttonNext}
             </Button>
           )}
         </div>
