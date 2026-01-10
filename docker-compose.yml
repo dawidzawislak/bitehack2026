@@ -33,8 +33,6 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/api/api
-    env_file:
-      - .env
     environment:
       - RECOMMENDER_URL=http://recommender:8001
     depends_on:
