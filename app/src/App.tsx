@@ -1,6 +1,6 @@
 import { RouteProvider } from "./context/RouteProvider";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-// import MapComponent from "./components/MapComponent";
+import Home from "./pages/Home";
 import Plan from "./pages/Plan";
 import NewDay from "./pages/NewDay";
 import Header from "./components/Header";
@@ -13,8 +13,8 @@ export default function App() {
           <Header />
           <main className="flex-grow overflow-hidden">
             <Routes>
-              <Route path="/" element={<></>} />
-              <Route path="/home" element={<></>} />
+              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/new-day/:id" element={<NewDay />} />
               <Route path="/categories" element={<></>} />
