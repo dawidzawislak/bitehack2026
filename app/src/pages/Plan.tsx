@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import Content from "../components/common/Content";
 import PlanDayCard from "../components/PlanDayCard";
 import { useRouteCtx } from "../hooks/useRouteCtx";
+import { Button } from "../components/common";
+import { PlusIcon } from "../components/icons";
 
 export default function Plan() {
   const { planDays } = useRouteCtx();
@@ -25,12 +27,15 @@ export default function Plan() {
             onClick={() => navigate(`/new-day/${index}`)}
           />
         ))}
-        <button
-          className="w-full border border-orange-200 rounded-xl overflow-hidden flex relative text-7xl flex justify-center shadow-md hover:bg-orange-50 hover:shadow-lg"
+        {planDays.length === 0 && <p>Click the + button to add a new day.</p>}
+        <Button
+          variant="secondary"
+          fullWidth
+          className="border-orange-200 flex justify-center items-center shadow-md hover:bg-orange-50 hover:shadow-lg p-3 text-orange-400 hover:text-orange-500"
           onClick={() => navigate("/new-day/new")}
         >
-          +
-        </button>
+          <PlusIcon />
+        </Button>
       </div>
     </Content>
   );

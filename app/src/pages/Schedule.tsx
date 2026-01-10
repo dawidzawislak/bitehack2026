@@ -1,40 +1,14 @@
-import { useEffect, useState } from "react";
-import { API } from "../utils/api";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TimelineItem from "../components/TimelineItem";
 import { Heading, Section, Button } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
-import type { DaySchedule } from "../types/models";
+import DaySelector from "../components/DaySelector";
 
 export default function Schedule() {
-  const { schedule, setSchedule } = useRouteCtx();
+  const { schedule } = useRouteCtx();
+  const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        // Only fetch if schedule is empty
-        if (schedule.length === 0) {
-          const response = await API.schedule.get();
-          setSchedule(response.data.schedule as DaySchedule[]);
-        }
-      } catch (error) {
-        console.error("Error fetching schedule:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSchedule();
-  }, [schedule.length, setSchedule]);
-
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
 
   if (schedule.length === 0) {
     return (
@@ -45,6 +19,7 @@ export default function Schedule() {
   }
 
   const currentDaySchedule = schedule[selectedDay];
+  
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("pl-PL", {
@@ -68,16 +43,13 @@ export default function Schedule() {
         </Heading>
 
         {/* Day selector */}
-        <div className="flex items-center gap-2">
-          {schedule.map((day, index) => (
-            <Button
-              key={day.date}
-              onClick={() => setSelectedDay(index)}
-              variant={selectedDay === index ? "primary" : "secondary"}            >
-              Day {index + 1} • {formatDate(day.date)}
-            </Button>
-          ))}
-        </div>
+        <DaySelector
+          currentDay={selectedDay}
+          totalDays={schedule.length}
+          date={currentDaySchedule.date}
+          onPreviousDay={() => setSelectedDay(selectedDay - 1)}
+          onNextDay={() => setSelectedDay(selectedDay + 1)}
+        />
       </div>
 
       {/* Main content */}
@@ -172,10 +144,7 @@ export default function Schedule() {
         {/* Map button */}
         <div className="p-6">
           <Button
-            onClick={() => {
-              // TODO: Navigate to map with route points
-              console.log("Navigate to map with points:", currentDaySchedule);
-            }}
+            onClick={() => navigate('/map')}
             variant="primary"
             fullWidth
           >
