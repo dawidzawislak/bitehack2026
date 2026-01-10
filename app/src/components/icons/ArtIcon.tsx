@@ -1,7 +1,23 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 viewBox="0 0 512 512" xml:space="preserve">
+import type { FC, SVGProps } from 'react'
+
+interface ArtIconProps extends SVGProps<SVGSVGElement> {
+  size?: number
+}
+
+const ArtIcon: FC<ArtIconProps> = ({ size = 24, ...props }) => {
+  return (
+    <svg
+    version="1.1"
+    id="Layer_1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink" 
+	viewBox="0 0 512 512"
+    xml:space="preserve"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    {...props}>
 <rect x="61.213" y="10.881" style="fill:#B27214;" width="389.904" height="491.624"/>
 <rect x="96.804" y="46.373" style="fill:#2197D8;" width="318.395" height="419.245"/>
 <rect x="96.804" y="161.938" style="fill:#9AD14B;" width="318.395" height="303.68"/>
@@ -73,3 +89,7 @@
 		H411.69l20.945,20.945H79.366L100.311,474.1z M423.677,462.113V49.887l20.945-20.945v454.117L423.677,462.113z"/>
 </g>
 </svg>
+  )
+}
+
+export default ArtIcon
