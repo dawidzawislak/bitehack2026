@@ -3,6 +3,7 @@ import { API } from "../utils/api";
 import TimelineItem from "../components/TimelineItem";
 import { Heading, Section, Button } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
+import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
 import type { DaySchedule } from "../types/models";
 
 export default function Schedule() {
@@ -45,6 +46,9 @@ export default function Schedule() {
   }
 
   const currentDaySchedule = schedule[selectedDay];
+  const canGoPrevious = selectedDay > 0;
+  const canGoNext = selectedDay < schedule.length - 1;
+  
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("pl-PL", {
@@ -68,15 +72,41 @@ export default function Schedule() {
         </Heading>
 
         {/* Day selector */}
-        <div className="flex items-center gap-2">
-          {schedule.map((day, index) => (
-            <Button
-              key={day.date}
-              onClick={() => setSelectedDay(index)}
-              variant={selectedDay === index ? "primary" : "secondary"}            >
-              Day {index + 1} • {formatDate(day.date)}
-            </Button>
-          ))}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSelectedDay(selectedDay - 1)}
+            disabled={!canGoPrevious}
+            className={`p-2 rounded-lg transition-colors ${
+              canGoPrevious
+                ? "hover:bg-gray-100 text-gray-700 cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+            aria-label="Previous day"
+          >
+            <ChevronLeftIcon size={32} />
+          </button>
+          
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900">
+              Day {selectedDay + 1}
+            </div>
+            <div className="text-sm text-gray-600">
+              {formatDate(currentDaySchedule.date)}
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setSelectedDay(selectedDay + 1)}
+            disabled={!canGoNext}
+            className={`p-2 rounded-lg transition-colors ${
+              canGoNext
+                ? "hover:bg-gray-100 text-gray-700 cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+            aria-label="Next day"
+          >
+            <ChevronRightIcon size={32} />
+          </button>
         </div>
       </div>
 
