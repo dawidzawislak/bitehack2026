@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useRouteCtx } from '../hooks/useRouteCtx';
 import { Button, Modal, Heading } from '../components/common';
+import DaySelector from '../components/DaySelector';
 import type { TimelineItem, TimelinePlace, TimelineRestaurant } from '../types/models';
 
 // Fix for default marker icon in Leaflet
@@ -227,17 +228,13 @@ export default function Map() {
         </div>
 
         {/* Day selector */}
-        <div className="flex items-center gap-2">
-          {schedule.map((day, index) => (
-            <Button
-              key={day.date}
-              onClick={() => setSelectedDay(index)}
-              variant={selectedDay === index ? 'primary' : 'secondary'}
-            >
-              Day {index + 1} • {formatDate(day.date)}
-            </Button>
-          ))}
-        </div>
+        <DaySelector
+          currentDay={selectedDay}
+          totalDays={schedule.length}
+          date={currentDaySchedule.date}
+          onPreviousDay={() => setSelectedDay(selectedDay - 1)}
+          onNextDay={() => setSelectedDay(selectedDay + 1)}
+        />
       </div>
 
       {/* Map */}

@@ -1,43 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API } from "../utils/api";
 import TimelineItem from "../components/TimelineItem";
 import { Heading, Section, Button } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
-import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
-import type { DaySchedule } from "../types/models";
+import DaySelector from "../components/DaySelector";
 
 export default function Schedule() {
-  const { schedule, setSchedule } = useRouteCtx();
+  const { schedule } = useRouteCtx();
   const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        // Only fetch if schedule is empty
-        if (schedule.length === 0) {
-          const response = await API.schedule.get();
-          setSchedule(response.data.schedule as DaySchedule[]);
-        }
-      } catch (error) {
-        console.error("Error fetching schedule:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSchedule();
-  }, [schedule.length, setSchedule]);
-
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
 
   if (schedule.length === 0) {
     return (
@@ -48,8 +19,6 @@ export default function Schedule() {
   }
 
   const currentDaySchedule = schedule[selectedDay];
-  const canGoPrevious = selectedDay > 0;
-  const canGoNext = selectedDay < schedule.length - 1;
   
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -74,42 +43,13 @@ export default function Schedule() {
         </Heading>
 
         {/* Day selector */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setSelectedDay(selectedDay - 1)}
-            disabled={!canGoPrevious}
-            className={`p-2 rounded-lg transition-colors ${
-              canGoPrevious
-                ? "hover:bg-gray-100 text-gray-700 cursor-pointer"
-                : "text-gray-300 cursor-not-allowed"
-            }`}
-            aria-label="Previous day"
-          >
-            <ChevronLeftIcon size={32} />
-          </button>
-          
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
-              Day {selectedDay + 1}
-            </div>
-            <div className="text-sm text-gray-600">
-              {formatDate(currentDaySchedule.date)}
-            </div>
-          </div>
-          
-          <button
-            onClick={() => setSelectedDay(selectedDay + 1)}
-            disabled={!canGoNext}
-            className={`p-2 rounded-lg transition-colors ${
-              canGoNext
-                ? "hover:bg-gray-100 text-gray-700 cursor-pointer"
-                : "text-gray-300 cursor-not-allowed"
-            }`}
-            aria-label="Next day"
-          >
-            <ChevronRightIcon size={32} />
-          </button>
-        </div>
+        <DaySelector
+          currentDay={selectedDay}
+          totalDays={schedule.length}
+          date={currentDaySchedule.date}
+          onPreviousDay={() => setSelectedDay(selectedDay - 1)}
+          onNextDay={() => setSelectedDay(selectedDay + 1)}
+        />
       </div>
 
       {/* Main content */}
