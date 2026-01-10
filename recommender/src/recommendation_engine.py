@@ -139,6 +139,7 @@ class RecommendationEngine:
         meal_type: str,
         meal_time: datetime,
         visited_ids: Set[str],
+        food_preferences: List[str] = [],
         max_distance_km: float = 5.0,
         limit: int = 5
     ) -> List[Tuple[Dict, float]]:
@@ -149,6 +150,14 @@ class RecommendationEngine:
             List of tuples (restaurant_dict, distance_km)
         """
         suggestions = []
+        
+        # Default food type preferences by meal type
+        default_preferences = {
+            "breakfast": ["catering.cafe", "catering.cafe.coffee"],
+            "lunch": ["catering.cafe", "catering.restaurant"],
+            "dinner": ["catering.restaurant"],
+            "supper": ["catering.restaurant", "catering.pub"]
+        }
         
         # Query all places
         all_places = list(self.db.places.find())
@@ -194,9 +203,41 @@ class RecommendationEngine:
             if not meal_suitability.get(suitability_key, False):
                 continue
             
-            # Calculate score based on popularity and distance
-            popularity = place.get("popularity", 5)
+            place_food_categories = place.get('geoapify_categories', [])
+            
+            # If user has food preferences, filter strictly by them
+            if food_preferences:
+                has_preferred_food = any(
+                    pref in place_food_categories for pref in food_preferences
+                )
+                # If user specified preferences but place doesn't match, skip it
+                if not has_preferred_food:
+                    # Check if it at least matches default preferences for this meal type
+                    meal_defaults = default_preferences.get(meal_type.lower(), [])
+                    has_default_match = any(
+                        any(default in cat for default in meal_defaults)
+                        for cat in place_food_categories
+                    )
+                    # Skip if doesn't match user preferences and not a default type
+                    if not has_default_match:
+                        continue
+            
+            # Calculate base score
+            popularity = place.get('popularity', 5)
             score = (popularity * 2) - (distance_km * 1)
+            
+            # Highest priority: User's food preferences (if specified)
+            if food_preferences:
+                if any(pref in place_food_categories for pref in food_preferences):
+                    score += 8  # Strong bonus for user preferences
+            
+            # Secondary priority: Default meal type preferences
+            meal_defaults = default_preferences.get(meal_type.lower(), [])
+            for cat in place_food_categories:
+                for default_pref in meal_defaults:
+                    if default_pref in cat:
+                        score += 3  # Moderate bonus for meal type match
+                        break
             
             suggestions.append((place, distance_km, score))
         
@@ -247,6 +288,7 @@ class RecommendationEngine:
         start_location: Location,
         end_location: Location,
         preferred_categories: List[str],
+        food_preferences: List[str],
         meals: List[MealRequest]
     ) -> List[DaySchedule]:
         """
@@ -314,6 +356,7 @@ class RecommendationEngine:
                             meal_type=meal.type,
                             meal_time=meal_time,
                             visited_ids=visited_ids,
+                            food_preferences=food_preferences,
                             limit=1  # Get only 1 restaurant per meal
                         )
                         
