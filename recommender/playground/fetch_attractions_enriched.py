@@ -9,20 +9,39 @@ def fetch_geoapify_places():
     """
     geoapify_url = "https://api.geoapify.com/v2/places"
     
-    params = {
-        'categories': 'entertainment,leisure,natural,national_park,tourism,adult,sport,religion,beach,catering,accommodation',
+    # Pobierz 500 atrakcji (bez accommodation)
+    params_attractions = {
+        'categories': 'entertainment,leisure,natural,national_park,tourism,adult,sport,religion,beach',
         'filter': 'rect:19.83109029839192,50.12573410110706,20.04664289886501,49.98617978536494',  # Kraków
         'limit': 500,
         'apiKey': '65f53b555b2a4cf9b1104ed4d629f70b'
     }
     
-    print("Pobieranie danych z Geoapify API...")
-    response = requests.get(geoapify_url, params=params)
+    print("Pobieranie atrakcji z Geoapify API...")
+    response = requests.get(geoapify_url, params=params_attractions)
     response.raise_for_status()
-    
     data = response.json()
     features = data.get('features', [])
-    print(f"Pobrano {len(features)} miejsc z Geoapify API")
+    print(f"Pobrano {len(features)} atrakcji")
+    
+    # Pobierz 200 miejsc gastronomicznych
+    params_catering = {
+        'categories': 'catering',
+        'filter': 'rect:19.83109029839192,50.12573410110706,20.04664289886501,49.98617978536494',  # Kraków
+        'limit': 200,
+        'apiKey': '65f53b555b2a4cf9b1104ed4d629f70b'
+    }
+    
+    print("Pobieranie miejsc gastronomicznych z Geoapify API...")
+    response = requests.get(geoapify_url, params=params_catering)
+    response.raise_for_status()
+    data = response.json()
+    catering_features = data.get('features', [])
+    print(f"Pobrano {len(catering_features)} miejsc gastronomicznych")
+    
+    # Połącz wyniki
+    features.extend(catering_features)
+    print(f"Łącznie pobrano {len(features)} miejsc z Geoapify API")
     return features
 
 def categorize_from_geoapify(categories: List[str]) -> List[str]:
@@ -450,7 +469,7 @@ def enrich_with_nominatim(places: List[Dict]) -> List[Dict]:
     print("\n✅ Pomijam Nominatim - Geoapify już zawiera dane adresowe z OSM\n")
     return places
 
-def save_places_to_json(places: List[Dict], filename: str = "krakow_places_enriched.json"):
+def save_places_to_json(places: List[Dict], filename: str = "../data/krakow_places_enriched.json"):
     """Zapisuje miejsca do pliku JSON"""
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(places, f, ensure_ascii=False, indent=2)
