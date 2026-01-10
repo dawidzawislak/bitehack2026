@@ -122,39 +122,71 @@ Main backend that proxies to recommender:
   "schedule": [
     {
       "date": "2026-01-15",
-      "attractions": [
+      "timeline": [
         {
-          "id": "place_id",
-          "name": "Wawel Castle",
-          "location": {"lat": 50.0543, "lng": 19.9356},
-          "category": ["history", "architecture"],
-          "popularity": 10,
-          "visit_duration_min": 105,
-          "distance_km": 1.2,
-          "opening_hours": "Mo-Su 09:00-17:00",
-          "travel_time_min": 18,
-          "formatted_address": "Wawel 5, 31-001 Kraków",
-          "geoapify_categories": ["tourism.attraction"],
-          "price_level": 2
+          "item_type": "attraction",
+          "scheduled_time": "09:00",
+          "end_time": "10:45",
+          "place": {
+            "id": "place_id",
+            "name": "Wawel Castle",
+            "location": {"lat": 50.0543, "lng": 19.9356},
+            "category": ["history", "architecture"],
+            "popularity": 10,
+            "visit_duration_min": 105,
+            "distance_km": 1.2,
+            "opening_hours": "Mo-Su 09:00-17:00",
+            "travel_time_min": 18,
+            "formatted_address": "Wawel 5, 31-001 Kraków",
+            "geoapify_categories": ["tourism.attraction"],
+            "price_level": 2
+          },
+          "restaurant": null
+        },
+        {
+          "item_type": "meal",
+          "scheduled_time": "13:00",
+          "end_time": "14:15",
+          "place": null,
+          "restaurant": {
+            "id": "restaurant_id",
+            "name": "Restaurant Name",
+            "location": {"lat": 50.0647, "lng": 19.9450},
+            "category": ["food"],
+            "geoapify_categories": ["catering.restaurant.regional"],
+            "popularity": 7,
+            "visit_duration_min": 75,
+            "distance_km": 0.5,
+            "opening_hours": "Mo-Su 12:00-22:00",
+            "travel_time_min": 8,
+            "formatted_address": "Main Square 10, Kraków",
+            "price_level": 2,
+            "meal_type": "lunch"
+          }
+        },
+        {
+          "item_type": "attraction",
+          "scheduled_time": "15:00",
+          "end_time": "16:30",
+          "place": {
+            "id": "place_id_2",
+            "name": "St. Mary's Basilica",
+            "location": {"lat": 50.0619, "lng": 19.9394},
+            "category": ["religion", "architecture"],
+            "popularity": 8,
+            "visit_duration_min": 45,
+            "distance_km": 0.8,
+            "opening_hours": "Mo-Sa 11:30-18:00",
+            "travel_time_min": 12,
+            "formatted_address": "Main Square, Kraków",
+            "geoapify_categories": ["religion.place_of_worship"],
+            "price_level": 0
+          },
+          "restaurant": null
         }
       ],
-      "meal_suggestions": [
-        {
-          "id": "restaurant_id",
-          "name": "Restaurant Name",
-          "location": {"lat": 50.0647, "lng": 19.9450},
-          "category": ["food"],
-          "geoapify_categories": ["catering.restaurant.regional"],
-          "popularity": 7,
-          "visit_duration_min": 75,
-          "distance_km": 0.5,
-          "opening_hours": "Mo-Su 12:00-22:00",
-          "travel_time_min": 8,
-          "formatted_address": "Main Square 10, Kraków",
-          "price_level": 2,
-          "meal_type": "lunch"
-        }
-      ]
+      "total_attractions": 2,
+      "total_meals": 1
     }
   ],
   "total_days": 3,
@@ -187,13 +219,16 @@ score = (popularity * 3) - (distance_km * 1)
 
 ### Features
 
+- ✅ Chronological timeline with interleaved attractions and meals
+- ✅ Scheduled times for each activity (HH:MM format)
 - ✅ Geospatial filtering by distance
 - ✅ Opening hours validation
 - ✅ No duplicate places across days
 - ✅ Category preference matching
 - ✅ Popularity + distance balancing
-- ✅ Meal-time restaurant suggestions
+- ✅ Smart meal placement at preferred times
 - ✅ Dynamic travel time calculation
+- ✅ Time-aware scheduling (attractions fit before meals)
 
 ## Development
 
@@ -204,8 +239,9 @@ cd recommender
 pip install -r requirements.txt
 export MONGODB_URL=mongodb://localhost:27017
 export MONGODB_DB=places_db
-python init_db.py  # First time only
-uvicorn main:app --reload --port 8001
+export PYTHONPATH=.
+python src/init_db.py  # First time only
+uvicorn src.main:app --reload --port 8001
 ```
 
 ### Run Main API Locally
@@ -221,7 +257,7 @@ uvicorn api.main:app --reload --port 8000
 
 **MongoDB not initialized:**
 ```bash
-docker exec -it recommender python init_db.py
+docker exec -it recommender python src/init_db.py
 ```
 
 **View logs:**
