@@ -28,6 +28,10 @@ class RecommendRequest(BaseModel):
         default=[],
         description="Preferred place categories (e.g., 'history', 'architecture', 'art')"
     )
+    food_preferences: List[str] = Field(
+        default=[],
+        description="Preferred food categories (e.g., 'catering.restaurant.italian', 'catering.cafe')"
+    )
     meals: List[MealRequest] = Field(
         default=[],
         description="Meal preferences for each day"

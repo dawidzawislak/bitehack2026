@@ -38,7 +38,15 @@ Get categories:
 curl http://localhost:8000/api/categories
 ```
 
+Get food categories:
+```bash
+curl http://localhost:8000/api/food-categories
+```
+
 Get statistics:
+```bash
+curl http://localhost:8000/api/stats
+```
 ```bash
 curl http://localhost:8000/api/stats
 ```
@@ -53,6 +61,7 @@ curl -X POST http://localhost:8000/api/recommend \
     "start_location": {"lat": 50.0647, "lng": 19.9450},
     "end_location": {"lat": 50.0647, "lng": 19.9450},
     "preferred_categories": ["history", "architecture"],
+    "food_preferences": ["catering.restaurant.italian", "catering.cafe"],
     "meals": [
       {"type": "lunch", "preferred_time": "13:00"},
       {"type": "dinner", "preferred_time": "19:00"}
@@ -70,6 +79,7 @@ Direct access to recommendation engine:
 - `GET /health` - Health with database status
 - `POST /api/recommend` - Generate recommendations
 - `GET /api/categories` - List available categories
+- `GET /api/food-categories` - List available food categories
 - `GET /api/stats` - Database statistics
 
 ### Main API (port 8000)
@@ -79,6 +89,7 @@ Main backend that proxies to recommender:
 - `GET /` - Health check
 - `POST /api/recommend` - Get recommendations (proxied)
 - `GET /api/categories` - Get categories (proxied)
+- `GET /api/food-categories` - Get food categories (proxied)
 - `GET /api/stats` - Get stats (proxied)
 
 ## Request Format
@@ -98,6 +109,11 @@ Main backend that proxies to recommender:
     "lng": 19.9450
   },
   "preferred_categories": ["history", "architecture", "art"],
+  "food_preferences": [
+    "catering.restaurant.italian",
+    "catering.restaurant.regional",
+    "catering.cafe"
+  ],
   "meals": [
     {
       "type": "breakfast",
@@ -122,71 +138,39 @@ Main backend that proxies to recommender:
   "schedule": [
     {
       "date": "2026-01-15",
-      "timeline": [
+      "attractions": [
         {
-          "item_type": "attraction",
-          "scheduled_time": "09:00",
-          "end_time": "10:45",
-          "place": {
-            "id": "place_id",
-            "name": "Wawel Castle",
-            "location": {"lat": 50.0543, "lng": 19.9356},
-            "category": ["history", "architecture"],
-            "popularity": 10,
-            "visit_duration_min": 105,
-            "distance_km": 1.2,
-            "opening_hours": "Mo-Su 09:00-17:00",
-            "travel_time_min": 18,
-            "formatted_address": "Wawel 5, 31-001 Kraków",
-            "geoapify_categories": ["tourism.attraction"],
-            "price_level": 2
-          },
-          "restaurant": null
-        },
-        {
-          "item_type": "meal",
-          "scheduled_time": "13:00",
-          "end_time": "14:15",
-          "place": null,
-          "restaurant": {
-            "id": "restaurant_id",
-            "name": "Restaurant Name",
-            "location": {"lat": 50.0647, "lng": 19.9450},
-            "category": ["food"],
-            "geoapify_categories": ["catering.restaurant.regional"],
-            "popularity": 7,
-            "visit_duration_min": 75,
-            "distance_km": 0.5,
-            "opening_hours": "Mo-Su 12:00-22:00",
-            "travel_time_min": 8,
-            "formatted_address": "Main Square 10, Kraków",
-            "price_level": 2,
-            "meal_type": "lunch"
-          }
-        },
-        {
-          "item_type": "attraction",
-          "scheduled_time": "15:00",
-          "end_time": "16:30",
-          "place": {
-            "id": "place_id_2",
-            "name": "St. Mary's Basilica",
-            "location": {"lat": 50.0619, "lng": 19.9394},
-            "category": ["religion", "architecture"],
-            "popularity": 8,
-            "visit_duration_min": 45,
-            "distance_km": 0.8,
-            "opening_hours": "Mo-Sa 11:30-18:00",
-            "travel_time_min": 12,
-            "formatted_address": "Main Square, Kraków",
-            "geoapify_categories": ["religion.place_of_worship"],
-            "price_level": 0
-          },
-          "restaurant": null
+          "id": "place_id",
+          "name": "Wawel Castle",
+          "location": {"lat": 50.0543, "lng": 19.9356},
+          "category": ["history", "architecture"],
+          "popularity": 10,
+          "visit_duration_min": 105,
+          "distance_km": 1.2,
+          "opening_hours": "Mo-Su 09:00-17:00",
+          "travel_time_min": 18,
+          "formatted_address": "Wawel 5, 31-001 Kraków",
+          "geoapify_categories": ["tourism.attraction"],
+          "price_level": 2
         }
       ],
-      "total_attractions": 2,
-      "total_meals": 1
+      "meal_suggestions": [
+        {
+          "id": "restaurant_id",
+          "name": "Restaurant Name",
+          "location": {"lat": 50.0647, "lng": 19.9450},
+          "category": ["food"],
+          "geoapify_categories": ["catering.restaurant.regional"],
+          "popularity": 7,
+          "visit_duration_min": 75,
+          "distance_km": 0.5,
+          "opening_hours": "Mo-Su 12:00-22:00",
+          "travel_time_min": 8,
+          "formatted_address": "Main Square 10, Kraków",
+          "price_level": 2,
+          "meal_type": "lunch"
+        }
+      ]
     }
   ],
   "total_days": 3,
@@ -210,6 +194,17 @@ score = 10 + (popularity * 2) - (distance_km * 1)
 score = (popularity * 3) - (distance_km * 1)
 ```
 
+**Restaurant Scoring:**
+```
+base_score = (popularity * 2) - (distance_km * 1)
++ 8 points if matches user's food_preferences
++ 3 points if matches meal type defaults:
+  - breakfast: cafes
+  - lunch: cafes & restaurants
+  - dinner: restaurants
+  - supper: restaurants & pubs
+```
+
 ### Time Allocation
 
 - **Daily Hours:** 9:00 - 21:00 (12 hours)
@@ -225,6 +220,12 @@ score = (popularity * 3) - (distance_km * 1)
 - ✅ Opening hours validation
 - ✅ No duplicate places across days
 - ✅ Category preference matching
+- ✅ Food preference filtering with smart defaults:
+  - Breakfast → prefers cafes
+  - Lunch → balanced between cafes and restaurants
+  - Dinner → prefers restaurants
+  - Supper → prefers restaurants and pubs
+  - User preferences always take priority
 - ✅ Popularity + distance balancing
 - ✅ Smart meal placement at preferred times
 - ✅ Dynamic travel time calculation
@@ -239,9 +240,8 @@ cd recommender
 pip install -r requirements.txt
 export MONGODB_URL=mongodb://localhost:27017
 export MONGODB_DB=places_db
-export PYTHONPATH=.
-python src/init_db.py  # First time only
-uvicorn src.main:app --reload --port 8001
+python init_db.py  # First time only
+uvicorn main:app --reload --port 8001
 ```
 
 ### Run Main API Locally

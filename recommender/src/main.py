@@ -117,6 +117,7 @@ def get_recommendations(request: RecommendRequest):
             start_location=request.start_location,
             end_location=request.end_location,
             preferred_categories=request.preferred_categories,
+            food_preferences=request.food_preferences,
             meals=request.meals
         )
         
@@ -164,6 +165,41 @@ def get_categories():
         raise HTTPException(
             status_code=500,
             detail=f"Error fetching categories: {str(e)}"
+        )
+
+
+@app.get("/api/food-categories")
+def get_food_categories():
+    """
+    Get list of available food categories from the database.
+    
+    Returns:
+        List of unique food-related geoapify_categories
+    """
+    try:
+        # Get all places with food category
+        food_places = db.places.find({"categories": "food"})
+        
+        # Collect all unique geoapify_categories
+        food_categories = set()
+        for place in food_places:
+            geo_cats = place.get("geoapify_categories", [])
+            for cat in geo_cats:
+                if cat.startswith("catering"):
+                    food_categories.add(cat)
+        
+        # Sort categories
+        sorted_categories = sorted(list(food_categories))
+        
+        return {
+            "food_categories": sorted_categories,
+            "count": len(sorted_categories)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching food categories: {str(e)}"
         )
 
 

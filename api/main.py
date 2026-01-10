@@ -74,6 +74,24 @@ async def get_categories():
         )
 
 
+@app.get("/api/food-categories")
+async def get_food_categories():
+    """
+    Get available food categories from recommender service.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{RECOMMENDER_URL}/api/food-categories")
+            response.raise_for_status()
+            return response.json()
+            
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Could not connect to recommender service: {str(e)}"
+        )
+
+
 @app.get("/api/stats")
 async def get_stats():
     """
