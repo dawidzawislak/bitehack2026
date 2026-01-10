@@ -19,7 +19,7 @@ export default function Schedule() {
   }
 
   const currentDaySchedule = schedule[selectedDay];
-  
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("pl-PL", {
@@ -77,7 +77,8 @@ export default function Schedule() {
                     </div>
                     {currentDaySchedule.timeline.length > 0 && (
                       <div className="text-xs text-gray-500 mt-2">
-                        {currentDaySchedule.timeline[0].scheduled_time} - Start of route
+                        {currentDaySchedule.timeline[0].scheduled_time} - Start
+                        of route
                       </div>
                     )}
                   </div>
@@ -107,7 +108,12 @@ export default function Schedule() {
                     </div>
                     {currentDaySchedule.timeline.length > 0 && (
                       <div className="text-xs text-gray-500 mt-2">
-                        {currentDaySchedule.timeline[currentDaySchedule.timeline.length - 1].end_time} - End of route
+                        {
+                          currentDaySchedule.timeline[
+                            currentDaySchedule.timeline.length - 1
+                          ].end_time
+                        }{" "}
+                        - End of route
                       </div>
                     )}
                   </div>
@@ -143,11 +149,7 @@ export default function Schedule() {
 
         {/* Map button */}
         <div className="p-6">
-          <Button
-            onClick={() => navigate('/map')}
-            variant="primary"
-            fullWidth
-          >
+          <Button onClick={() => navigate("/map")} variant="primary" fullWidth>
             View route on map
           </Button>
         </div>

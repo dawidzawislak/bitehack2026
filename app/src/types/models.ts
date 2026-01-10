@@ -12,6 +12,8 @@ export interface Place {
   rating: number;
 }
 
+export type BackgroundType = "location" | "categories" | "plan" | "default";
+
 export interface PlanDay {
   date: string;
   startHour: string;

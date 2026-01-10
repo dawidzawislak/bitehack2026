@@ -4,10 +4,15 @@ import PlanDayCard from "../components/PlanDayCard";
 import { useRouteCtx } from "../hooks/useRouteCtx";
 import { Button } from "../components/common";
 import { PlusIcon } from "../components/icons";
+import { useEffect } from "react";
 
 export default function Plan() {
-  const { planDays } = useRouteCtx();
+  const { planDays, setBackgroundType } = useRouteCtx();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setBackgroundType("plan");
+  }, [setBackgroundType]);
 
   return (
     <Content
