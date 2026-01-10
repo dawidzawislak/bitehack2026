@@ -9,9 +9,9 @@ export default function App() {
   return (
     <RouteProvider>
       <Router>
-        <div className="h-screen">
+        <div className="h-screen flex flex-col">
           <Header />
-          <main className="h-full">
+          <main className="flex-grow overflow-hidden">
             <Routes>
               <Route path="/" element={<></>} />
               <Route path="/home" element={<></>} />
