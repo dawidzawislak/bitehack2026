@@ -1,7 +1,10 @@
 import { useState } from "react";
 import Content from "../components/common/Content";
+import { useRouteCtx } from "../hooks/useRouteCtx";
 
 export default function NewDay() {
+  const { setPlanDays } = useRouteCtx();
+
   const [formData, setFormData] = useState({
     date: "",
     startHour: "",
@@ -14,16 +17,22 @@ export default function NewDay() {
     },
   });
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
+
+  const addDay = () => {
+    // Logic to add the new day plan
+  };
+
   return (
     <Content
       header="New day plan"
       sidebar={true}
       button1="Add"
-      button1action={() => {}}
-      button2="Add2" // opcjonalne
-      button2action={() => {}} // opcjonalne
+      button1action={addDay}
     >
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div>
           <label className="block mb-1 text-xl" htmlFor="date">
             Date
