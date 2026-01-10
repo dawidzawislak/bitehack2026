@@ -103,22 +103,20 @@ def get_recommendations(request: RecommendRequest):
         if not engine:
             raise HTTPException(status_code=503, detail="Recommendation engine not initialized")
         
-        # Validate dates
-        if request.start_datetime >= request.end_datetime:
+        # Validate days list is not empty
+        if not request.days:
             raise HTTPException(
                 status_code=400,
-                detail="end_datetime must be after start_datetime"
+                detail="At least one day must be provided"
             )
         
         # Generate recommendations
         schedule = engine.generate_recommendations(
-            start_datetime=request.start_datetime,
-            end_datetime=request.end_datetime,
             start_location=request.start_location,
             end_location=request.end_location,
+            days=request.days,
             preferred_categories=request.preferred_categories,
-            food_preferences=request.food_preferences,
-            meals=request.meals
+            food_preferences=request.food_preferences
         )
         
         # Calculate totals
