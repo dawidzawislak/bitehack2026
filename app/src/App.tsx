@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Plan from "./pages/Plan";
 import NewDay from "./pages/NewDay";
 import Schedule from "./pages/Schedule";
+import Map from "./pages/Map";
 import Header from "./components/Header";
 import ChooseCategories from "./pages/ChooseCategories";
 
@@ -21,7 +22,7 @@ export default function App() {
               <Route path="/new-day/:id" element={<NewDay />} />
               <Route path="/categories" element={<ChooseCategories />} />
               <Route path="/schedule" element={<Schedule />} />
-              {/* <Route path="/map" element={<MapComponent />} /> */}
+              <Route path="/map" element={<Map />} />
               <Route path="/details/:id" element={<></>} />
             </Routes>
           </main>

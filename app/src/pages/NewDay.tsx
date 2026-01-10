@@ -9,6 +9,8 @@ export default function NewDay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  // Get current date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
   // Compute initial form data based on id parameter
   const initialFormData = useMemo(() => {
     if (id && id !== "new") {
@@ -31,6 +33,12 @@ export default function NewDay() {
   }, [id, planDays]);
 
   const [formData, setFormData] = useState(initialFormData);
+
+  // Check if selected date is today
+  const isToday = useMemo(
+    () => formData.date === today,
+    [formData.date, today]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +80,8 @@ export default function NewDay() {
             type="date"
             id="date"
             value={formData.date}
+            min={today}
+            className="w-full p-2 border border-gray-300 rounded-lg text-lg"
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, date: e.target.value }))
             }
@@ -84,13 +94,22 @@ export default function NewDay() {
           <input
             type="time"
             id="startHour"
+            className="w-full p-2 border border-gray-300 rounded-lg text-lg"
             value={formData.startHour}
-            onChange={(e) =>
+            onChange={(e) => {
+              const selectedTime = e.target.value;
+              if (isToday) {
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+                if (selectedTime < currentTime) {
+                  return; // Nie pozwalaj na wybór wcześniejszej godziny
+                }
+              }
               setFormData((prev) => ({
                 ...prev,
-                startHour: e.target.value,
-              }))
-            }
+                startHour: selectedTime,
+              }));
+            }}
           />
         </div>
         <div>
@@ -100,18 +119,31 @@ export default function NewDay() {
           <input
             type="time"
             id="endHour"
+            className="w-full p-2 border border-gray-300 rounded-lg text-lg"
             value={formData.endHour}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, endHour: e.target.value }))
-            }
+            onChange={(e) => {
+              const selectedTime = e.target.value;
+              if (isToday) {
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+                if (selectedTime < currentTime) {
+                  return; // Nie pozwalaj na wybór wcześniejszej godziny
+                }
+              }
+              setFormData((prev) => ({ ...prev, endHour: selectedTime }));
+            }}
           />
         </div>
         <div>
-          <span className="block mb-1 text-xl">Meals</span>
+          <span className="block mb-1 mt-2 text-xl">Meals</span>
           {["breakfast", "lunch", "dinner", "supper"].map((meal) => (
-            <label key={meal} className="block text-lg">
+            <label
+              key={meal}
+              className="block text-lg flex items-center mb-0.5"
+            >
               <input
                 type="checkbox"
+                className="ml-4 w-4 h-4"
                 checked={formData.meals[meal as keyof typeof formData.meals]}
                 onChange={(e) =>
                   setFormData((prev) => ({

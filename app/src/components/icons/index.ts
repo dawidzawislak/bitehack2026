@@ -3,6 +3,8 @@ export { default as CastleIcon } from "./CastleIcon";
 export { default as ChampagneIcon } from "./ChampagneIcon";
 export { default as ChevronDownIcon } from "./ChevronDownIcon";
 export { default as ClockIcon } from "./ClockIcon";
+export { default as ChevronLeftIcon } from "./ChevronLeftIcon";
+export { default as ChevronRightIcon } from "./ChevronRightIcon";
 export { default as CloseIcon } from "./CloseIcon";
 export { default as CoffeeIcon } from "./CoffeeIcon";
 export { default as DesignIcon } from "./DesignIcon";
