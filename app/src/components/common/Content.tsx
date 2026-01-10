@@ -10,6 +10,7 @@ export default function Content({
   buttonBack,
   buttonNextAction,
   buttonBackAction,
+  buttonNextDisabled,
 }: {
   header: string;
   children: ReactNode;
@@ -18,6 +19,7 @@ export default function Content({
   buttonBack?: string;
   buttonNextAction?: () => void;
   buttonBackAction?: () => void;
+  buttonNextDisabled?: boolean;
 }) {
   return (
     <div className="flex h-full">
@@ -37,7 +39,7 @@ export default function Content({
             </Button>
           )}
           {buttonNext && (
-            <Button fullWidth className="mt-4" onClick={buttonNextAction}>
+            <Button fullWidth className="mt-4" onClick={buttonNextAction} disabled={buttonNextDisabled}>
               {buttonNext}
             </Button>
           )}
