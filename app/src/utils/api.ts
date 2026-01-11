@@ -33,6 +33,23 @@ export interface RecommendResponse {
   total_attractions: number;
 }
 
+export interface CategoriesResponse {
+  categories: string[];
+}
+
+export interface FoodCategoriesResponse {
+  food_categories: string[];
+}
+
+export interface PredictPreferencesRequest {
+  user_input: string;
+}
+
+export interface PredictPreferencesResponse {
+  categories: string[];
+  food_categories: string[];
+}
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
   headers: {
@@ -59,7 +76,25 @@ export const API = {
       const response = await apiClient.post<RecommendResponse>("/api/recommend", request);
       return response.data;
     },
-  }
+  },
+  categories: {
+    getAll: async (): Promise<CategoriesResponse> => {
+      const response = await apiClient.get<CategoriesResponse>("/api/categories");
+      return response.data;
+    },
+  },
+  foodCategories: {
+    getAll: async (): Promise<FoodCategoriesResponse> => {
+      const response = await apiClient.get<FoodCategoriesResponse>("/api/food-categories");
+      return response.data;
+    },
+  },
+  preferences: {
+    predict: async (request: PredictPreferencesRequest): Promise<PredictPreferencesResponse> => {
+      const response = await apiClient.post<PredictPreferencesResponse>("/api/predict-preferences", request);
+      return response.data;
+    },
+  },
 };
 
 export default apiClient;
