@@ -94,14 +94,18 @@ def build_prompt(user_input: str, place_categories: List[str], food_categories: 
     prompt = f"""You are a travel preference classifier. Given a user's natural language input about what they want to see/do, classify it into relevant Geoapify categories.
 
 AVAILABLE PLACE CATEGORIES:
-{', '.join(place_categories[:100])}  # Include first 100 to manage prompt size
+{', '.join(place_categories[:100])}
 
 AVAILABLE FOOD CATEGORIES:
 {', '.join(food_categories)}
 
-Categories use dot notation (e.g., tourism.attraction, catering.restaurant.thai).
-Output ONLY valid JSON with two arrays: "categories" for places and "food_categories" for food.
-Only use categories from the lists above.
+IMPORTANT RULES:
+- Categories use dot notation (e.g., tourism.attraction, catering.restaurant.thai)
+- ALL food and drink establishments (restaurants, cafes, bars, pubs, etc.) belong in "food_categories", NOT "categories"
+- When user mentions places, sports and other activities - these are ALWAYS in categories (e.g., leisure.park, entertainment.museum)
+- When user mentions bars, pubs, cafes, restaurants - these are ALWAYS in food_categories (e.g., catering.bar, catering.pub, catering.cafe)
+- Only use categories that exist in the lists above
+- Output ONLY valid JSON with two arrays: "categories" for places and "food_categories" for food/drink
 
 EXAMPLES:
 
@@ -119,6 +123,12 @@ Output: {{"categories": [], "food_categories": ["catering.restaurant.thai", "cat
 
 Input: "Traditional Polish restaurants"
 Output: {{"categories": [], "food_categories": ["catering.restaurant.regional", "catering.restaurant"]}}
+
+Input: "I'd like to visit nightclubs and bars"
+Output: {{"categories": ["adult.nightclub"], "food_categories": ["catering.bar", "catering.pub"]}}
+
+Input: "Fast food and casual dining"
+Output: {{"categories": [], "food_categories": ["catering.fast_food", "catering.restaurant"]}}
 
 Now classify:
 Input: "{user_input}"

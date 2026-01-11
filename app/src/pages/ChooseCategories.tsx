@@ -4,7 +4,7 @@ import { useRouteCtx } from "../hooks/useRouteCtx";
 import Content from "../components/common/Content";
 import { useNavigate } from "react-router-dom";
 import { API } from "../utils/api";
-import { Modal } from "../components/common";
+import { Modal, Button, Textarea } from "../components/common";
 import { buildRecommendRequest } from "../utils/requestBuilder";
 import { InterestsDict, FoodDict } from "../utils/InterestPageDict";
 
@@ -146,22 +146,22 @@ export default function ChooseCategories() {
         className="rounded-tr-3xl"
       >
         {/* AI Input Section */}
-        <div className="mb-6">
-          <input
-            type="text"
+        <div className="mb-6 relative z-10">
+          <Textarea
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             placeholder="Describe your perfect tour"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3"
+            rows={4}
             disabled={isPredicting}
+            className="mb-3"
           />
-          <button
+          <Button
             onClick={handleSuggestPreferences}
             disabled={isPredicting || !userInput.trim()}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            fullWidth
           >
             {isPredicting ? "Analyzing..." : "Suggest Preferences"}
-          </button>
+          </Button>
         </div>
 
         <div className="border-t border-gray-300 pt-6 mt-6">
@@ -205,7 +205,7 @@ export default function ChooseCategories() {
       {/* Loading Modal */}
       <Modal isOpen={isGenerating} onClose={() => {}}>
         <div className="flex flex-col items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-500 mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mb-4"></div>
           <h2 className="text-2xl font-bold mb-2">
             Creating Your Perfect Trip
           </h2>

@@ -25,5 +25,15 @@ else
     echo "Model pull completed."
 fi
 
+echo "Warming up model (loading into memory)..."
+curl -X POST http://ollama:11434/api/generate -d '{
+  "model": "llama3.2:3b-instruct-fp16",
+  "prompt": "Hello",
+  "stream": false,
+  "options": {"num_predict": 5}
+}' > /dev/null 2>&1
+
+echo "Model warmed up and ready!"
+
 echo "Starting FastAPI application..."
 exec uvicorn main:app --host 0.0.0.0 --port 8002 --reload
