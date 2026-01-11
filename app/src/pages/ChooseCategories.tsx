@@ -58,13 +58,27 @@ export default function ChooseCategories() {
 
   // Helper function to format category labels
   const formatCategoryLabel = (category: string): string => {
-    // Take the last part of the category path and capitalize it
     const parts = category.split(".");
-    const lastPart = parts[parts.length - 1];
-    return lastPart
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+    
+    // If there's only one part, format it directly
+    if (parts.length === 1) {
+      return parts[0]
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+    
+    // If there are multiple parts, show the last two (or all if less than 2)
+    // to distinguish between categories like "entertainment" and "building.entertainment"
+    const relevantParts = parts.slice(-2);
+    return relevantParts
+      .map((part) =>
+        part
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      )
+      .join(" - ");
   };
 
   const handleGenerateSchedule = async () => {

@@ -13,51 +13,104 @@ from src.opening_hours_parser import OpeningHoursParser, calculate_travel_time
 class RecommendationEngine:
     """Engine for generating place recommendations."""
     
-    # Meal time windows
-    MEAL_TIME_WINDOWS = {
-        "breakfast": (time(8, 0), time(10, 0)),
-        "lunch": (time(12, 0), time(14, 0)),
-        "dinner": (time(16, 0), time(18, 0)),
-        "supper": (time(20, 0), time(22, 0))
-    }
+    # Minimum separation between meals in minutes
+    MIN_MEAL_SEPARATION_MINUTES = 120
     
     def __init__(self, db: Database):
         self.db = db
         self.parser = OpeningHoursParser()
     
-    def validate_and_adjust_meal_time(
+    def calculate_meal_schedule(
         self,
-        meal_type: str,
-        day_start: time,
-        day_end: time,
-        current_date: datetime.date
-    ) -> Optional[datetime]:
+        meal_types: List[str],
+        day_start: datetime,
+        day_end: datetime
+    ) -> List[Tuple[datetime, str]]:
         """
-        Validate and adjust meal time to fit within day boundaries.
+        Calculate meal times by dividing the day into segments.
+        Ensures meals are separated by at least 2 hours.
         
+        Args:
+            meal_types: List of meal types requested (e.g., ["breakfast", "lunch", "dinner"])
+            day_start: Start datetime of the day
+            day_end: End datetime of the day
+            
         Returns:
-            datetime for the meal or None if meal doesn't fit
+            List of tuples (meal_datetime, meal_type) for meals that can be scheduled
         """
-        if meal_type not in self.MEAL_TIME_WINDOWS:
-            return None
+        if not meal_types:
+            return []
         
-        window_start, window_end = self.MEAL_TIME_WINDOWS[meal_type]
+        total_minutes = (day_end - day_start).total_seconds() / 60
+        num_meals = len(meal_types)
         
-        # Check if meal window overlaps with day schedule
-        if window_end < day_start or window_start > day_end:
-            return None  # Meal window completely outside day schedule
+        # Need at least 30 min per meal + 120 min separation between meals
+        min_required_minutes = (num_meals * 30) + ((num_meals - 1) * self.MIN_MEAL_SEPARATION_MINUTES)
         
-        # Adjust meal time to fit within day boundaries
-        meal_start = max(window_start, day_start)
-        meal_start = min(meal_start, day_end)
+        if total_minutes < min_required_minutes:
+            # Not enough time for all meals with proper separation
+            # Try to fit as many as possible
+            scheduled_meals = []
+            current_time = day_start
+            
+            for meal_type in meal_types:
+                # Check if we have at least 30 minutes left
+                remaining_time = (day_end - current_time).total_seconds() / 60
+                
+                if remaining_time >= 30:
+                    scheduled_meals.append((current_time, meal_type))
+                    # Move forward by meal duration (90 min) + separation (120 min)
+                    current_time += timedelta(minutes=90 + self.MIN_MEAL_SEPARATION_MINUTES)
+                else:
+                    # Skip this meal, not enough time
+                    break
+            
+            return scheduled_meals
         
-        # Check if we have at least 30 minutes for the meal
-        meal_end_limit = min(window_end, day_end)
-        if (datetime.combine(current_date, meal_end_limit) - 
-            datetime.combine(current_date, meal_start)).total_seconds() / 60 < 30:
-            return None  # Not enough time for meal
+        # Divide the day into segments
+        # We have num_meals meals to place across the day
+        # Strategy: place meals evenly throughout the day
         
-        return datetime.combine(current_date, meal_start)
+        scheduled_meals = []
+        
+        # Calculate interval between meals
+        # Total time minus meal durations, divided by (num_meals + 1) for spacing
+        meal_duration_estimate = 90  # minutes
+        available_for_spacing = total_minutes - (num_meals * meal_duration_estimate)
+        interval = available_for_spacing / (num_meals + 1)
+        
+        current_time = day_start + timedelta(minutes=interval)
+        
+        for i, meal_type in enumerate(meal_types):
+            # Check if this meal time is valid (within day bounds)
+            if current_time >= day_end:
+                break
+            
+            # Check separation from previous meal (if any)
+            if scheduled_meals:
+                prev_meal_time = scheduled_meals[-1][0]
+                time_since_last_meal = (current_time - prev_meal_time).total_seconds() / 60
+                
+                if time_since_last_meal < self.MIN_MEAL_SEPARATION_MINUTES:
+                    # Try to adjust to minimum separation
+                    adjusted_time = prev_meal_time + timedelta(minutes=self.MIN_MEAL_SEPARATION_MINUTES)
+                    
+                    # Check if adjusted time still fits in the day
+                    remaining_after_adjusted = (day_end - adjusted_time).total_seconds() / 60
+                    
+                    if remaining_after_adjusted >= 30:
+                        current_time = adjusted_time
+                    else:
+                        # Skip this meal
+                        continue
+            
+            scheduled_meals.append((current_time, meal_type))
+            
+            # Move to next interval
+            if i < num_meals - 1:
+                current_time += timedelta(minutes=meal_duration_estimate + interval)
+        
+        return scheduled_meals
     
     def calculate_distance(self, loc1: Location, loc2: Dict[str, float]) -> float:
         """Calculate distance between two locations in kilometers."""
@@ -198,11 +251,11 @@ class RecommendationEngine:
         """
         suggestions = []
         
-        # Default food type preferences by meal type
+        # Default food type preferences by meal type (using startswith logic)
         default_preferences = {
-            "breakfast": ["catering.cafe", "catering.cafe.coffee"],
-            "lunch": ["catering.cafe", "catering.restaurant"],
-            "dinner": ["catering.restaurant"],
+            "breakfast": ["catering.cafe", "catering.bar"],
+            "lunch": ["catering.cafe", "catering.bar", "catering.fast_food"],
+            "dinner": ["catering.fast_food", "catering.restaurant"],
             "supper": ["catering.restaurant", "catering.pub"]
         }
         
@@ -262,7 +315,7 @@ class RecommendationEngine:
                     # Check if it at least matches default preferences for this meal type
                     meal_defaults = default_preferences.get(meal_type.lower(), [])
                     has_default_match = any(
-                        any(default in cat for default in meal_defaults)
+                        any(cat.startswith(default) for default in meal_defaults)
                         for cat in place_food_categories
                     )
                     # Skip if doesn't match user preferences and not a default type
@@ -282,7 +335,7 @@ class RecommendationEngine:
             meal_defaults = default_preferences.get(meal_type.lower(), [])
             for cat in place_food_categories:
                 for default_pref in meal_defaults:
-                    if default_pref in cat:
+                    if cat.startswith(default_pref):
                         score += 3  # Moderate bonus for meal type match
                         break
             
@@ -357,23 +410,20 @@ class RecommendationEngine:
                 continue  # Skip invalid date/time format
             
             day_datetime = datetime.combine(current_date, day_start_time)
+            end_of_day = datetime.combine(current_date, day_end_time)
             
-            # Prepare meal targets
-            meal_targets = []
-            for meal_type in day_request.meals:
-                meal_time = self.validate_and_adjust_meal_time(
-                    meal_type, day_start_time, day_end_time, current_date
-                )
-                if meal_time:
-                    meal_targets.append((meal_time, meal_type))
+            # Calculate meal schedule for the day
+            meal_schedule = self.calculate_meal_schedule(
+                meal_types=day_request.meals,
+                day_start=day_datetime,
+                day_end=end_of_day
+            )
             
-            meal_targets.sort(key=lambda x: x[0])
             used_meals = set()
             
             # Generate integrated timeline
             current_location = start_location
             current_time = datetime.combine(current_date, day_start_time)
-            end_of_day = datetime.combine(current_date, day_end_time)
             
             timeline = []
             
@@ -383,13 +433,14 @@ class RecommendationEngine:
                 should_insert_meal = False
                 meal_to_insert = None
                 
-                for meal_time, meal_type in meal_targets:
+                for meal_time, meal_type in meal_schedule:
                     if meal_type not in used_meals:
-                        # Check if we're within the meal window
+                        # Check if we've reached or passed the scheduled meal time
                         time_diff = (meal_time - current_time).total_seconds() / 60
                         
-                        # Insert meal if within 60 min before or 30 min after ideal time
-                        if -30 <= time_diff <= 60:
+                        # Insert meal if we're within 30 minutes of the scheduled time
+                        # or if we've passed it (to catch up)
+                        if -30 <= time_diff <= 30:
                             should_insert_meal = True
                             meal_to_insert = (meal_time, meal_type)
                             break
