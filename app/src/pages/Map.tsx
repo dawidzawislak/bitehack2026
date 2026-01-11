@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useRouteCtx } from "../hooks/useRouteCtx";
@@ -36,7 +36,10 @@ export default function Map() {
   const routeLayerRef = useRef<L.GeoJSON | null>(null);
   const { schedule } = useRouteCtx();
   const navigate = useNavigate();
-  const [selectedDay, setSelectedDay] = useState(0);
+  const location = useLocation();
+  const [selectedDay, setSelectedDay] = useState(
+    (location.state as { selectedDay?: number })?.selectedDay ?? 0
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     item: TimelineItem;
@@ -228,7 +231,7 @@ export default function Map() {
       <Content
         sidebar={false}
         buttonBack="Back to Schedule"
-        buttonBackAction={() => navigate("/schedule")}
+        buttonBackAction={() => navigate("/schedule", { state: { selectedDay } })}
       >
         <div className="h-full flex flex-col">
           {/* Header */}
