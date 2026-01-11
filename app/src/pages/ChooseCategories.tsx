@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import CustomMultiSelect from "../components/common/CustomMultiSelect";
 import { useRouteCtx } from "../hooks/useRouteCtx";
 import Content from "../components/common/Content";
-import { snakeCaseToTitleCase } from "../utils/stringUtils";
 import { useNavigate } from "react-router-dom";
 import { API } from "../utils/api";
 import { Modal } from "../components/common";
@@ -29,6 +28,8 @@ export default function ChooseCategories() {
   );
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userInput, setUserInput] = useState<string>("");
+  const [isPredicting, setIsPredicting] = useState(false);
   const navigate = useNavigate();
   const HOST_IP = import.meta.env.VITE_LAN_HOST_IP as string;
 
@@ -52,16 +53,7 @@ export default function ChooseCategories() {
     fetch(`https://jkt0vj59-8000.euw.devtunnels.ms/api/food-categories`)
       .then((res) => res.json())
       .then((data) => {
-        setAvailableCuisineTypes(
-          Array.from(
-            new Set(
-              data.food_categories
-                .map((cat: string) => cat.split("."))
-                .filter((cat: string[]) => cat.length > 1)
-                .map((cat: string[]) => cat[cat.length - 1])
-            )
-          )
-        );
+        setAvailableCuisineTypes(data.food_categories);
       });
   }, []);
 
@@ -105,6 +97,43 @@ export default function ChooseCategories() {
     }
   };
 
+  const handleSuggestPreferences = async () => {
+    if (!userInput.trim()) {
+      setError("Please describe your perfect tour first.");
+      return;
+    }
+
+    try {
+      setIsPredicting(true);
+      setError(null);
+
+      const response = await fetch(`http://${HOST_IP}:8000/api/predict-preferences`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_input: userInput,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI predictions");
+      }
+
+      const data = await response.json();
+
+      // Update the selected categories with AI predictions
+      setPlaceCategories(data.categories || []);
+      setCuisineTypes(data.food_categories || []);
+    } catch (err) {
+      console.error("Error getting AI predictions:", err);
+      setError("Failed to get AI suggestions. Please try again.");
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   return (
     <>
       <Content
@@ -116,6 +145,31 @@ export default function ChooseCategories() {
         buttonBackAction={() => navigate("/plan")}
         className="rounded-tr-3xl"
       >
+        {/* AI Input Section */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="Describe your perfect tour"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3"
+            disabled={isPredicting}
+          />
+          <button
+            onClick={handleSuggestPreferences}
+            disabled={isPredicting || !userInput.trim()}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {isPredicting ? "Analyzing..." : "Suggest Preferences"}
+          </button>
+        </div>
+
+        <div className="border-t border-gray-300 pt-6 mt-6">
+          <p className="text-sm text-gray-600 mb-4">
+            Or manually select your preferences:
+          </p>
+        </div>
+
         Preferred place categories:
         <CustomMultiSelect
           options={availablePlaceCategories.map((category) => {
@@ -131,13 +185,13 @@ export default function ChooseCategories() {
         <br />
         Preferred cuisine types:
         <CustomMultiSelect
-          options={availableCuisineTypes.map((category) => ({
-            label:
-              (FoodDict[snakeCaseToTitleCase(category)] ?? "") +
-              " " +
-              snakeCaseToTitleCase(category),
-            value: category,
-          }))}
+          options={availableCuisineTypes.map((category) => {
+            const formattedLabel = formatCategoryLabel(category);
+            return {
+              label: (FoodDict[formattedLabel] ?? "") + " " + formattedLabel,
+              value: category,
+            };
+          })}
           value={cuisineTypes}
           onChange={(newCategories) => setCuisineTypes(newCategories)}
         />

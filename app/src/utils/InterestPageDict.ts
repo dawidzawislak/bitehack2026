@@ -96,6 +96,7 @@ export const InterestsDict: { [key: string]: string } = {
 };
 
 export const FoodDict: { [key: string]: string } = {
+    "Catering" : "🍽️",
     "Bar" : "🍸",
     "Cafe" : "🫖",
     "Coffee" : "☕",
