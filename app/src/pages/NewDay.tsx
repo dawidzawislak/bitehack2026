@@ -23,8 +23,16 @@ export default function NewDay() {
         return planDays[dayIndex];
       }
     }
+    let defaultDate = today;
+
+    if (planDays.length > 0) {
+      const lastDateStr = planDays[planDays.length - 1].date;
+      const lastDate = new Date(lastDateStr);
+      lastDate.setDate(lastDate.getDate() + 1);
+      defaultDate = lastDate.toISOString().split("T")[0];
+    }
     return {
-      date: today,
+      date: defaultDate,
       startHour: "08:00",
       endHour: "19:00",
       meals: {
