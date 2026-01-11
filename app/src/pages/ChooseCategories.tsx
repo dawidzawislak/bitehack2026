@@ -31,12 +31,10 @@ export default function ChooseCategories() {
   const [userInput, setUserInput] = useState<string>("");
   const [isPredicting, setIsPredicting] = useState(false);
   const navigate = useNavigate();
-  const HOST_IP = import.meta.env.VITE_LAN_HOST_IP as string;
 
   useEffect(() => {
     setBackgroundType("categories");
-    fetch(`https://jkt0vj59-8000.euw.devtunnels.ms/api/categories`)
-      .then((res) => res.json())
+    API.categories.getAll()
       .then((data) => {
         // Filter out unwanted categories
         const filteredCategories = data.categories.filter((cat: string) => {
@@ -48,14 +46,15 @@ export default function ChooseCategories() {
                  !cat.startsWith("access_limited");
         });
         setAvailablePlaceCategories(filteredCategories);
-      });
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
 
-    fetch(`https://jkt0vj59-8000.euw.devtunnels.ms/api/food-categories`)
-      .then((res) => res.json())
+    API.foodCategories.getAll()
       .then((data) => {
         setAvailableCuisineTypes(data.food_categories);
-      });
-  }, []);
+      })
+      .catch((err) => console.error("Error fetching food categories:", err));
+  }, [setBackgroundType]);
 
   // Helper function to format category labels
   const formatCategoryLabel = (category: string): string => {
@@ -107,21 +106,9 @@ export default function ChooseCategories() {
       setIsPredicting(true);
       setError(null);
 
-      const response = await fetch(`http://${HOST_IP}:8000/api/predict-preferences`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_input: userInput,
-        }),
+      const data = await API.preferences.predict({
+        user_input: userInput,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to get AI predictions");
-      }
-
-      const data = await response.json();
 
       // Update the selected categories with AI predictions
       setPlaceCategories(data.categories || []);
