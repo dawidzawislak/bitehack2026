@@ -14,7 +14,7 @@ const Button: FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    "px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-lg";
+    "p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-md";
 
   const variantStyles = {
     primary: "bg-orange-600 text-white hover:bg-orange-700",
