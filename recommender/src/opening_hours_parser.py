@@ -238,6 +238,66 @@ class OpeningHoursParser:
             return int(numbers[0])
         
         return 60  # Default fallback
+    
+    @classmethod
+    def get_visit_time_range(cls, avg_visit_time: Optional[str], is_food: bool = False) -> Tuple[int, int]:
+        """
+        Get minimum and maximum visit time from avg_visit_time string.
+        
+        Args:
+            avg_visit_time: String like "60-90 min" from database
+            is_food: True if this is a food place, False for attractions
+            
+        Returns:
+            Tuple of (min_minutes, max_minutes)
+            
+        Defaults:
+            - Attractions: 30 min to 120 min
+            - Food: 60 min to 120 min
+        """
+        # Set defaults based on place type
+        if is_food:
+            default_min, default_max = 60, 120
+        else:
+            default_min, default_max = 30, 120
+        
+        if not avg_visit_time:
+            return (default_min, default_max)
+        
+        # Extract numbers from string like "60-90 min" or "30-45 min"
+        numbers = re.findall(r'\d+', avg_visit_time)
+        
+        if len(numbers) >= 2:
+            # Use the range from database
+            min_time = int(numbers[0])
+            max_time = int(numbers[1])
+            return (max(min_time, default_min), min(max_time, default_max))
+        elif len(numbers) == 1:
+            # Single value - use it as midpoint with default range
+            midpoint = int(numbers[0])
+            return (max(default_min, midpoint - 15), min(default_max, midpoint + 15))
+        
+        return (default_min, default_max)
+    
+    @classmethod
+    def adjust_visit_time(cls, avg_visit_time: Optional[str], available_minutes: int, is_food: bool = False) -> int:
+        """
+        Adjust visit time to fit available time while respecting min/max constraints.
+        
+        Args:
+            avg_visit_time: String from database
+            available_minutes: Time available in schedule
+            is_food: True if food place, False for attraction
+            
+        Returns:
+            Adjusted visit time in minutes
+        """
+        min_time, max_time = cls.get_visit_time_range(avg_visit_time, is_food)
+        
+        # Clamp available time to min/max range
+        adjusted = max(min_time, min(available_minutes, max_time))
+        
+        return adjusted
 
 
 def calculate_travel_time(distance_km: float) -> int:
