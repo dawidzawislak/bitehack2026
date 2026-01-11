@@ -7,7 +7,7 @@ import { PlusIcon } from "../components/icons";
 import { useEffect } from "react";
 
 export default function Plan() {
-  const { planDays, setBackgroundType } = useRouteCtx();
+  const { planDays, setBackgroundType, setPlanDays } = useRouteCtx();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +31,10 @@ export default function Plan() {
             i={index + 1}
             plan={plan}
             onClick={() => navigate(`/new-day/${index}`)}
+            onDelete={() => {
+              const updatedDays = planDays.filter((_, i) => i !== index);
+              setPlanDays(updatedDays);
+            }}
           />
         ))}
         {planDays.length === 0 && <p>Click the + button to add a new day.</p>}

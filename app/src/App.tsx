@@ -11,6 +11,7 @@ import backgroundImgLocation from "./assets/bg-location.png";
 import backgroundImgCategories from "./assets/bg-categories.png";
 import backgroundImgPlan from "./assets/bg-plan.png";
 import Map from "./pages/Map";
+import HomePage from "./pages/HomePage";
 
 export default function App() {
   const { backgroundType } = useRouteCtx();
@@ -36,9 +37,9 @@ export default function App() {
         className="h-screen flex flex-col main-container transition-all transition-duration-1000"
         style={{ backgroundImage }}
       >
-        <main className="flex-grow overflow-hidden mt-[125px]">
+        <main className="flex-grow overflow-hidden mt-[37vw]">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<Home />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/new-day/:id" element={<NewDay />} />

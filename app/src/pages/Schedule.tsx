@@ -23,7 +23,7 @@ export default function Schedule() {
 
   if (schedule.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center flex-col gap-4 p-4">
+      <div className="h-full flex items-center justify-center flex-col gap-4 p-4 text-center">
         <div className="text-xl text-gray-600">No scheduled days</div>
         <Button onClick={() => navigate("/home")} fullWidth variant="primary">
           Start planning
