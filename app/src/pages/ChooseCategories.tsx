@@ -37,7 +37,16 @@ export default function ChooseCategories() {
     fetch(`http://${HOST_IP}:8000/api/categories`)
       .then((res) => res.json())
       .then((data) => {
-        setAvailablePlaceCategories(data.categories);
+        // Filter out unwanted categories
+        const filteredCategories = data.categories.filter((cat: string) => {
+          return !cat.startsWith("wheelchair") && 
+                 !cat.startsWith("no_fee") && 
+                 !cat.startsWith("no_access") && 
+                 !cat.startsWith("fee") && 
+                 !cat.startsWith("access") && 
+                 !cat.startsWith("access_limited");
+        });
+        setAvailablePlaceCategories(filteredCategories);
       });
 
     fetch(`http://${HOST_IP}:8000/api/food-categories`)
@@ -55,6 +64,17 @@ export default function ChooseCategories() {
         );
       });
   }, []);
+
+  // Helper function to format category labels
+  const formatCategoryLabel = (category: string): string => {
+    // Take the last part of the category path and capitalize it
+    const parts = category.split(".");
+    const lastPart = parts[parts.length - 1];
+    return lastPart
+      .split("_")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const handleGenerateSchedule = async () => {
     try {
@@ -97,10 +117,13 @@ export default function ChooseCategories() {
       >
         Preferred place categories:
         <CustomMultiSelect
-          options={availablePlaceCategories.map((category) => ({
-            label: (InterestsDict[category[0].toUpperCase() + category.slice(1)] ?? "") + " " + category[0].toUpperCase() + category.slice(1),
-            value: category,
-          }))}
+          options={availablePlaceCategories.map((category) => {
+            const formattedLabel = formatCategoryLabel(category);
+            return {
+              label: (InterestsDict[formattedLabel] ?? "") + " " + formattedLabel,
+              value: category,
+            };
+          })}
           value={placeCategories}
           onChange={(newCategories) => setPlaceCategories(newCategories)}
         />

@@ -29,17 +29,12 @@ export default function Schedule() {
     });
   };
 
-  // Helper to format location for display
-  const formatLocation = (location: { lat: number; lng: number }) => {
-    return `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`;
-  };
-
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b">
         <Heading level={1} className="mb-4">
-          Local route
+          Route Schedule
         </Heading>
 
         {/* Day selector */}
@@ -72,9 +67,6 @@ export default function Schedule() {
                 <div className="flex-1">
                   <div className="bg-green-100 rounded-lg p-4 shadow-sm border-2 border-green-500">
                     <div className="font-bold text-lg mb-1">🏠 Start</div>
-                    <div className="text-sm text-gray-600">
-                      {formatLocation(currentDaySchedule.start_location)}
-                    </div>
                     {currentDaySchedule.timeline.length > 0 && (
                       <div className="text-xs text-gray-500 mt-2">
                         {currentDaySchedule.timeline[0].scheduled_time} - Start
@@ -103,9 +95,6 @@ export default function Schedule() {
                 <div className="flex-1">
                   <div className="bg-red-100 rounded-lg p-4 shadow-sm border-2 border-red-500">
                     <div className="font-bold text-lg mb-1">🏁 Return home</div>
-                    <div className="text-sm text-gray-600">
-                      {formatLocation(currentDaySchedule.end_location)}
-                    </div>
                     {currentDaySchedule.timeline.length > 0 && (
                       <div className="text-xs text-gray-500 mt-2">
                         {
