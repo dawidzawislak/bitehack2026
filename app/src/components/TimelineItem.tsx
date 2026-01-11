@@ -33,7 +33,7 @@ export default function TimelineItem({ item, isFirst, isLast }: TimelineItemProp
       {/* Timeline line */}
       <div className="relative flex flex-col items-center mr-4">
         {/* Top line */}
-        {!isFirst && <div className="w-0.5 h-6 bg-gray-300 -mt-6"></div>}
+        <div className="w-0.5 h-6 bg-gray-300 -mt-6"></div>
         
         {/* Dot */}
         <div className="w-3 h-3 rounded-full bg-gray-600 border-2 border-white z-10"></div>

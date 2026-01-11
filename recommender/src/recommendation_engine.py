@@ -72,25 +72,36 @@ class RecommendationEngine:
         preferred_categories: List[str]
     ) -> float:
         """
-        Calculate score for a place.
+        Calculate score for a place with strong distance weighting.
+        Now uses geoapify_categories for matching.
         
-        Scoring formula:
-        - If category matches preferences: score = 10 + popularity * 2 - distance_km * 1
-        - Otherwise (fallback): score = popularity * 3 - distance_km * 1
+        Scoring formula prioritizes proximity:
+        - If geoapify_category matches preferences: score = 50 + popularity * 3 - distance_km * 10
+        - Otherwise (fallback): score = popularity * 1 - distance_km * 15
+        
+        This heavily favors nearby places while still respecting user preferences.
         """
         popularity = place.get("popularity", 5)
-        place_categories = place.get("categories", [])
+        place_geoapify_categories = place.get("geoapify_categories", [])
         
-        # Check if any category matches preferred categories
-        category_match = any(
-            cat in preferred_categories for cat in place_categories
-        ) if preferred_categories else False
+        # Check if any geoapify_category matches preferred categories
+        # We check for substring match (e.g., "tourism.attraction" matches "tourism")
+        category_match = False
+        if preferred_categories:
+            for pref_cat in preferred_categories:
+                for geo_cat in place_geoapify_categories:
+                    if pref_cat in geo_cat or geo_cat.startswith(pref_cat):
+                        category_match = True
+                        break
+                if category_match:
+                    break
         
         if category_match:
-            score = 10 + (popularity * 2) - (distance_km * 1)
+            # Good bonus for preferred categories, but distance is heavily weighted
+            score = 100 + (popularity * 3) - (distance_km * 10)
         else:
-            # Fallback: higher weight on popularity
-            score = (popularity * 3) - (distance_km * 1)
+            # Much weaker score for non-preferred places, distance extremely important
+            score = (popularity * 1) - (distance_km * 15)
         
         return score
     
@@ -111,15 +122,15 @@ class RecommendationEngine:
     
     def get_candidate_places(
         self,
-        start_location: Location,
-        end_location: Location,
+        current_location: Location,
         date: datetime,
         visited_ids: Set[str],
         preferred_categories: List[str],
         max_distance_km: float = 20.0
     ) -> List[Tuple[Dict, float, float]]:
         """
-        Get candidate places for a given day.
+        Get candidate places based on distance from current location.
+        Two-stage recommendation: first from start, then from previous place.
         
         Returns:
             List of tuples (place_dict, distance_km, score)
@@ -143,26 +154,20 @@ class RecommendationEngine:
             if not place.get("lat") or not place.get("lng"):
                 continue
             
-            # Calculate distance from both start and end locations
-            dist_from_start = self.calculate_distance(
-                start_location,
+            # Calculate distance from current location (start or last visited)
+            distance_km = self.calculate_distance(
+                current_location,
                 {"lat": place["lat"], "lng": place["lng"]}
             )
-            dist_from_end = self.calculate_distance(
-                end_location,
-                {"lat": place["lat"], "lng": place["lng"]}
-            )
-            
-            # Use minimum distance for scoring
-            distance_km = min(dist_from_start, dist_from_end)
             
             # Skip if too far
             if distance_km > max_distance_km:
                 continue
             
-            # Check if open during the day (sample check at 12:00)
-            check_time = datetime.combine(date.date(), time(12, 0))
-            if not self.parser.is_open(place.get("opening_hours"), check_time):
+            # Check if open at any point during the requested time window
+            # We'll check if the place is open at the start time of the day
+            # Note: 'date' is a datetime object with the day's start time
+            if not self.parser.is_open(place.get("opening_hours"), date):
                 continue
             
             # Calculate score
@@ -332,7 +337,9 @@ class RecommendationEngine:
         food_preferences: List[str]
     ) -> List[DaySchedule]:
         """
-        Generate complete recommendation schedule with chronological timeline.
+        Generate complete recommendation schedule.
+        Attractions and meals are integrated - meals are inserted when appropriate,
+        and subsequent attractions use the meal location as the starting point.
         
         Returns:
             List of DaySchedule objects for each day with timeline
@@ -351,166 +358,189 @@ class RecommendationEngine:
             
             day_datetime = datetime.combine(current_date, day_start_time)
             
-            # Get candidate places for this day
-            candidates = self.get_candidate_places(
-                start_location=start_location,
-                end_location=end_location,
-                date=day_datetime,
-                visited_ids=visited_ids,
-                preferred_categories=preferred_categories
-            )
-            
-            # Build chronological timeline for the day
-            timeline = []
-            current_time = datetime.combine(current_date, day_start_time)
-            end_of_day = datetime.combine(current_date, day_end_time)
-            
-            # Validate and schedule meals for this day
-            day_meals = []
+            # Prepare meal targets
+            meal_targets = []
             for meal_type in day_request.meals:
                 meal_time = self.validate_and_adjust_meal_time(
                     meal_type, day_start_time, day_end_time, current_date
                 )
                 if meal_time:
-                    day_meals.append((meal_time, meal_type))
+                    meal_targets.append((meal_time, meal_type))
             
-            day_meals.sort(key=lambda x: x[0])  # Sort by time
+            meal_targets.sort(key=lambda x: x[0])
+            used_meals = set()
             
-            # Track which meal we should insert next
-            next_meal_idx = 0
-            candidate_idx = 0
+            # Generate integrated timeline
+            current_location = start_location
+            current_time = datetime.combine(current_date, day_start_time)
+            end_of_day = datetime.combine(current_date, day_end_time)
             
-            # Build timeline by inserting attractions and meals chronologically
+            timeline = []
+            
+            # Main loop: add attractions and insert meals when appropriate
             while current_time < end_of_day:
-                # Check if it's time for a meal
-                if next_meal_idx < len(day_meals):
-                    meal_time, meal_type = day_meals[next_meal_idx]
-                    
-                    # If current time is close to meal time (within 30 min), insert meal
-                    if current_time >= meal_time - timedelta(minutes=30):
-                        # Get restaurant suggestion
-                        restaurant_tuples = self.get_restaurant_suggestions(
-                            location=start_location,
-                            meal_type=meal_type,
-                            meal_time=meal_time,
-                            visited_ids=visited_ids,
-                            food_preferences=food_preferences,
-                            limit=1  # Get only 1 restaurant per meal
-                        )
-                        
-                        if restaurant_tuples:
-                            rest_dict, distance_km = restaurant_tuples[0]
-                            visit_duration = self.parser.parse_visit_time(rest_dict.get("avg_visit_time"))
-                            travel_time = calculate_travel_time(distance_km)
-                            
-                            # Add travel time before meal
-                            current_time += timedelta(minutes=travel_time)
-                            
-                            # Create restaurant object
-                            restaurant = Restaurant(
-                                id=rest_dict.get("id", ""),
-                                name=rest_dict.get("name", "Unknown"),
-                                location=Location(
-                                    lat=rest_dict.get("lat"),
-                                    lng=rest_dict.get("lng")
-                                ),
-                                category=rest_dict.get("categories", []),
-                                geoapify_categories=rest_dict.get("geoapify_categories"),
-                                popularity=rest_dict.get("popularity"),
-                                visit_duration_min=visit_duration,
-                                distance_km=round(distance_km, 2),
-                                opening_hours=rest_dict.get("opening_hours"),
-                                travel_time_min=travel_time,
-                                formatted_address=rest_dict.get("formatted_address"),
-                                price_level=rest_dict.get("price_level"),
-                                meal_type=meal_type
-                            )
-                            
-                            # Add meal to timeline
-                            meal_start = current_time.strftime("%H:%M")
-                            current_time += timedelta(minutes=visit_duration)
-                            meal_end = current_time.strftime("%H:%M")
-                            
-                            timeline.append(TimelineItem(
-                                item_type="meal",
-                                scheduled_time=meal_start,
-                                end_time=meal_end,
-                                place=None,
-                                restaurant=restaurant
-                            ))
-                            
-                            visited_ids.add(rest_dict.get("id"))
-                        
-                        next_meal_idx += 1
-                        continue
+                # Check if we should insert a meal now
+                should_insert_meal = False
+                meal_to_insert = None
                 
-                # Insert attraction if we have time
-                if candidate_idx < len(candidates):
-                    place_dict, distance_km, score = candidates[candidate_idx]
-                    visit_duration = self.parser.parse_visit_time(place_dict.get("avg_visit_time"))
-                    travel_time = calculate_travel_time(distance_km)
+                for meal_time, meal_type in meal_targets:
+                    if meal_type not in used_meals:
+                        # Check if we're within the meal window
+                        time_diff = (meal_time - current_time).total_seconds() / 60
+                        
+                        # Insert meal if within 60 min before or 30 min after ideal time
+                        if -30 <= time_diff <= 60:
+                            should_insert_meal = True
+                            meal_to_insert = (meal_time, meal_type)
+                            break
+                
+                if should_insert_meal and meal_to_insert:
+                    meal_time, meal_type = meal_to_insert
                     
-                    total_time = visit_duration + travel_time
+                    # Get restaurant near current location
+                    restaurant_tuples = self.get_restaurant_suggestions(
+                        location=current_location,
+                        meal_type=meal_type,
+                        meal_time=current_time,
+                        visited_ids=visited_ids,
+                        food_preferences=food_preferences,
+                        max_distance_km=3.0,
+                        limit=1
+                    )
                     
-                    # Check if we have enough time before next meal or end of day
-                    time_until_next_meal = float('inf')
-                    if next_meal_idx < len(day_meals):
-                        meal_time, _ = day_meals[next_meal_idx]
-                        time_until_next_meal = (meal_time - current_time).total_seconds() / 60
-                    
-                    time_until_end = (end_of_day - current_time).total_seconds() / 60
-                    available_time = min(time_until_next_meal - 30, time_until_end)  # 30 min buffer before meal
-                    
-                    if total_time <= available_time:
+                    if restaurant_tuples:
+                        rest_dict, distance_km = restaurant_tuples[0]
+                        
+                        # Calculate meal duration
+                        visit_duration = self.parser.adjust_visit_time(
+                            rest_dict.get("avg_visit_time"),
+                            90,
+                            is_food=True
+                        )
+                        travel_time = calculate_travel_time(distance_km)
+                        
                         # Add travel time
                         current_time += timedelta(minutes=travel_time)
                         
-                        # Create place object
-                        place = Place(
-                            id=place_dict.get("id", ""),
-                            name=place_dict.get("name", "Unknown"),
+                        restaurant = Restaurant(
+                            id=rest_dict.get("id", ""),
+                            name=rest_dict.get("name", "Unknown"),
                             location=Location(
-                                lat=place_dict.get("lat"),
-                                lng=place_dict.get("lng")
+                                lat=rest_dict.get("lat"),
+                                lng=rest_dict.get("lng")
                             ),
-                            category=place_dict.get("categories", []),
-                            popularity=place_dict.get("popularity"),
+                            category=rest_dict.get("categories", []),
+                            geoapify_categories=rest_dict.get("geoapify_categories"),
+                            popularity=rest_dict.get("popularity"),
                             visit_duration_min=visit_duration,
                             distance_km=round(distance_km, 2),
-                            opening_hours=place_dict.get("opening_hours"),
+                            opening_hours=rest_dict.get("opening_hours"),
                             travel_time_min=travel_time,
-                            formatted_address=place_dict.get("formatted_address"),
-                            geoapify_categories=place_dict.get("geoapify_categories"),
-                            price_level=place_dict.get("price_level")
+                            formatted_address=rest_dict.get("formatted_address"),
+                            price_level=rest_dict.get("price_level"),
+                            meal_type=meal_type
                         )
                         
-                        # Add attraction to timeline
-                        attraction_start = current_time.strftime("%H:%M")
+                        meal_start = current_time.strftime("%H:%M")
                         current_time += timedelta(minutes=visit_duration)
-                        attraction_end = current_time.strftime("%H:%M")
+                        meal_end = current_time.strftime("%H:%M")
                         
                         timeline.append(TimelineItem(
-                            item_type="attraction",
-                            scheduled_time=attraction_start,
-                            end_time=attraction_end,
-                            place=place,
-                            restaurant=None
+                            item_type="meal",
+                            scheduled_time=meal_start,
+                            end_time=meal_end,
+                            place=None,
+                            restaurant=restaurant
                         ))
                         
-                        visited_ids.add(place_dict.get("id"))
-                        candidate_idx += 1
+                        visited_ids.add(rest_dict.get("id"))
+                        used_meals.add(meal_type)
+                        
+                        # IMPORTANT: Update location to restaurant for next attraction
+                        current_location = Location(
+                            lat=rest_dict.get("lat"),
+                            lng=rest_dict.get("lng")
+                        )
+                        continue
                     else:
-                        # Not enough time for this attraction, skip to next meal or end of day
-                        if next_meal_idx < len(day_meals):
-                            current_time = day_meals[next_meal_idx][0]
-                        else:
-                            break
+                        # No restaurant found, mark meal as used
+                        used_meals.add(meal_type)
+                
+                # Try to add an attraction
+                time_until_end = (end_of_day - current_time).total_seconds() / 60
+                
+                # Need at least 45 minutes for an attraction
+                if time_until_end < 45:
+                    break
+                
+                # Get candidates based on current location
+                candidates = self.get_candidate_places(
+                    current_location=current_location,
+                    date=day_datetime,
+                    visited_ids=visited_ids,
+                    preferred_categories=preferred_categories,
+                    max_distance_km=20.0
+                )
+                
+                if not candidates:
+                    break
+                
+                # Take the best candidate
+                place_dict, distance_km, score = candidates[0]
+                travel_time = calculate_travel_time(distance_km)
+                
+                # Adjust visit duration to fit available time
+                visit_duration = self.parser.adjust_visit_time(
+                    place_dict.get("avg_visit_time"),
+                    int(time_until_end - travel_time),
+                    is_food=False
+                )
+                
+                total_time = visit_duration + travel_time
+                
+                if total_time <= time_until_end:
+                    # Add the attraction
+                    current_time += timedelta(minutes=travel_time)
+                    
+                    place = Place(
+                        id=place_dict.get("id", ""),
+                        name=place_dict.get("name", "Unknown"),
+                        location=Location(
+                            lat=place_dict.get("lat"),
+                            lng=place_dict.get("lng")
+                        ),
+                        category=place_dict.get("categories", []),
+                        popularity=place_dict.get("popularity"),
+                        visit_duration_min=visit_duration,
+                        distance_km=round(distance_km, 2),
+                        opening_hours=place_dict.get("opening_hours"),
+                        travel_time_min=travel_time,
+                        formatted_address=place_dict.get("formatted_address"),
+                        geoapify_categories=place_dict.get("geoapify_categories"),
+                        price_level=place_dict.get("price_level")
+                    )
+                    
+                    attraction_start = current_time.strftime("%H:%M")
+                    current_time += timedelta(minutes=visit_duration)
+                    attraction_end = current_time.strftime("%H:%M")
+                    
+                    timeline.append(TimelineItem(
+                        item_type="attraction",
+                        scheduled_time=attraction_start,
+                        end_time=attraction_end,
+                        place=place,
+                        restaurant=None
+                    ))
+                    
+                    visited_ids.add(place_dict.get("id"))
+                    
+                    # Update location to this place for next iteration
+                    current_location = Location(
+                        lat=place_dict.get("lat"),
+                        lng=place_dict.get("lng")
+                    )
                 else:
-                    # No more candidates, skip to next meal or end
-                    if next_meal_idx < len(day_meals):
-                        current_time = day_meals[next_meal_idx][0]
-                    else:
-                        break
+                    break
             
             # Count attractions and meals
             total_attractions = sum(1 for item in timeline if item.item_type == "attraction")

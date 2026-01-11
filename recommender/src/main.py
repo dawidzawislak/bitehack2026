@@ -141,22 +141,33 @@ def get_recommendations(request: RecommendRequest):
 @app.get("/api/categories")
 def get_categories():
     """
-    Get list of available categories from the database.
+    Get list of available categories from the database based on geoapify_categories.
+    Excludes food-related categories.
     
     Returns:
-        List of unique categories
+        List of unique geoapify categories
     """
     try:
-        # Get distinct categories
-        categories = db.places.distinct("categories")
+        # Get all places that are not food-related
+        non_food_places = db.places.find({
+            "categories": {"$ne": "food"}
+        })
         
-        # Filter out "food" and None
-        categories = [cat for cat in categories if cat and cat != "food"]
-        categories.sort()
+        # Collect all unique geoapify_categories
+        place_categories = set()
+        for place in non_food_places:
+            geo_cats = place.get("geoapify_categories", [])
+            for cat in geo_cats:
+                # Exclude categories starting with "catering" (food-related)
+                if not cat.startswith("catering"):
+                    place_categories.add(cat)
+        
+        # Sort categories
+        sorted_categories = sorted(list(place_categories))
         
         return {
-            "categories": categories,
-            "count": len(categories)
+            "categories": sorted_categories,
+            "count": len(sorted_categories)
         }
         
     except Exception as e:
