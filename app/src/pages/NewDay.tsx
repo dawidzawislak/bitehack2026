@@ -141,13 +141,10 @@ export default function NewDay() {
         <div>
           <span className="block mb-1 mt-2 text-xl">Meals</span>
           {["breakfast", "lunch", "dinner", "supper"].map((meal) => (
-            <label
-              key={meal}
-              className="block text-lg flex items-center mb-0.5"
-            >
+            <div key={meal} className="block text-lg flex items-center mb-0.5 pointer-events-none">
               <input
                 type="checkbox"
-                className="ml-4 w-4 h-4"
+                className="ml-4 w-4 h-4 pointer-events-auto"
                 checked={formData.meals[meal as keyof typeof formData.meals]}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -159,10 +156,10 @@ export default function NewDay() {
                   }))
                 }
               />
-              <span className="ml-2">
+              <span className="ml-2 select-none">
                 {meal.charAt(0).toUpperCase() + meal.slice(1)}
               </span>
-            </label>
+            </div>
           ))}
         </div>
       </form>
