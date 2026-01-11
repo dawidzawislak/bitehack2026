@@ -28,23 +28,6 @@ const homeIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-const attractionIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const restaurantIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
 
 export default function Map() {
   const mapRef = useRef<L.Map | null>(null);
@@ -110,7 +93,7 @@ export default function Map() {
     L.marker(startLatLng, { icon: homeIcon })
       .addTo(mapRef.current);
 
-    // Add timeline items
+    // Add timeline items with numbered markers
     currentDaySchedule.timeline.forEach((item, index) => {
       const location = item.item_type === 'meal' 
         ? item.restaurant?.location 
@@ -120,8 +103,34 @@ export default function Map() {
         waypoints.push(`${location.lat},${location.lng}`);
         const latLng = L.latLng(location.lat, location.lng);
 
-        const icon = item.item_type === 'meal' ? restaurantIcon : attractionIcon;
-        const marker = L.marker(latLng, { icon })
+        // Create numbered icon
+        const color = item.item_type === 'meal' ? '#dc2626' : '#2563eb';
+        const numberedIcon = L.divIcon({
+          className: 'custom-numbered-icon',
+          html: `
+            <div style="
+              position: relative;
+              width: 30px;
+              height: 30px;
+              background-color: ${color};
+              border: 3px solid white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              font-size: 14px;
+              color: white;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            ">
+              ${index + 1}
+            </div>
+          `,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const marker = L.marker(latLng, { icon: numberedIcon })
           .addTo(mapRef.current!);
 
         // Make marker clickable to open modal
@@ -164,13 +173,12 @@ export default function Map() {
 
         // Add route to map
         if (data.features && data.features.length > 0) {
-
           routeLayerRef.current = L.geoJSON(data, {
             style: {
               color: '#f97316',
               weight: 4,
               opacity: 0.8
-            },
+            }
           }).addTo(mapRef.current);
 
           // Fit map to route bounds
