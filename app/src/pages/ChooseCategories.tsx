@@ -30,16 +30,17 @@ export default function ChooseCategories() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const HOST_IP = import.meta.env.VITE_LAN_HOST_IP as string;
 
   useEffect(() => {
     setBackgroundType("categories");
-    fetch("http://localhost:8000/api/categories")
+    fetch(`http://${HOST_IP}:8000/api/categories`)
       .then((res) => res.json())
       .then((data) => {
         setAvailablePlaceCategories(data.categories);
       });
 
-    fetch("http://localhost:8000/api/food-categories")
+    fetch(`http://${HOST_IP}:8000/api/food-categories`)
       .then((res) => res.json())
       .then((data) => {
         setAvailableCuisineTypes(
