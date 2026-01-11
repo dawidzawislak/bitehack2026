@@ -24,9 +24,9 @@ export default function NewDay() {
       }
     }
     return {
-      date: "",
-      startHour: "",
-      endHour: "",
+      date: today,
+      startHour: "08:00",
+      endHour: "19:00",
       meals: {
         breakfast: false,
         lunch: false,

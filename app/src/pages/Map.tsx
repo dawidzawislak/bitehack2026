@@ -359,12 +359,6 @@ export default function Map() {
                       {selectedItem.item.place.visit_duration_min} min
                     </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-600">Popularity</div>
-                    <div className="font-semibold">
-                      {(selectedItem.item.place.popularity * 100).toFixed(0)}%
-                    </div>
-                  </div>
                 </div>
               </>
             )}
@@ -376,12 +370,6 @@ export default function Map() {
                   ? selectedItem.item.restaurant?.opening_hours || 'N/A'
                   : selectedItem.item.place?.opening_hours || 'N/A'}
               </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <p className="text-sm text-gray-500 italic">
-                This is a placeholder modal. More details will be added soon.
-              </p>
             </div>
           </div>
         )}
