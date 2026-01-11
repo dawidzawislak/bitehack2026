@@ -22,4 +22,4 @@ ENV PYTHONPATH=/app
 EXPOSE 8002
 
 # Run the init script which will pull model and start the app
-CMD ["./init_model.sh"]
+CMD ["bash", "./init_model.sh"]
