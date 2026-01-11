@@ -3,7 +3,7 @@ import { Button, Heading, Section } from ".";
 import Sidebar from "../Sidebar";
 
 export default function Content({
-  header,
+  header = undefined,
   children,
   sidebar,
   buttonNext,
@@ -11,8 +11,9 @@ export default function Content({
   buttonNextAction,
   buttonBackAction,
   buttonNextDisabled,
+  className = "",
 }: {
-  header: string;
+  header?: string;
   children: ReactNode;
   sidebar: boolean;
   buttonNext?: string;
@@ -20,12 +21,17 @@ export default function Content({
   buttonNextAction?: () => void;
   buttonBackAction?: () => void;
   buttonNextDisabled?: boolean;
+  className?: string;
 }) {
   return (
     <div className="flex h-full">
-      <Section className="flex-grow flex flex-col overflow-hidden bg-white rounded-tr-3xl">
-        <Heading level={1}>{header}</Heading>
-        <hr className="my-4" />
+      <Section className={`flex-grow flex flex-col bg-white ${className}`}>
+        {header && (
+          <>
+            <Heading level={1}>{header}</Heading>
+            <hr className="my-4" />
+          </>
+        )}
         <div className="flex-grow overflow-y-auto">{children}</div>
         <div className="flex gap-4">
           {buttonBack && (

@@ -34,7 +34,7 @@ export default function ChooseCategories() {
 
   useEffect(() => {
     setBackgroundType("categories");
-    fetch(`http://${HOST_IP}:8000/api/categories`)
+    fetch(`https://jkt0vj59-8000.euw.devtunnels.ms/api/categories`)
       .then((res) => res.json())
       .then((data) => {
         // Filter out unwanted categories
@@ -49,7 +49,7 @@ export default function ChooseCategories() {
         setAvailablePlaceCategories(filteredCategories);
       });
 
-    fetch(`http://${HOST_IP}:8000/api/food-categories`)
+    fetch(`https://jkt0vj59-8000.euw.devtunnels.ms/api/food-categories`)
       .then((res) => res.json())
       .then((data) => {
         setAvailableCuisineTypes(
@@ -72,7 +72,7 @@ export default function ChooseCategories() {
     const lastPart = parts[parts.length - 1];
     return lastPart
       .split("_")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
@@ -114,6 +114,7 @@ export default function ChooseCategories() {
         buttonNextAction={handleGenerateSchedule}
         buttonBack="Back"
         buttonBackAction={() => navigate("/plan")}
+        className="rounded-tr-3xl"
       >
         Preferred place categories:
         <CustomMultiSelect
@@ -131,7 +132,10 @@ export default function ChooseCategories() {
         Preferred cuisine types:
         <CustomMultiSelect
           options={availableCuisineTypes.map((category) => ({
-            label: (FoodDict[snakeCaseToTitleCase(category)] ?? "") + " " + snakeCaseToTitleCase(category),
+            label:
+              (FoodDict[snakeCaseToTitleCase(category)] ?? "") +
+              " " +
+              snakeCaseToTitleCase(category),
             value: category,
           }))}
           value={cuisineTypes}

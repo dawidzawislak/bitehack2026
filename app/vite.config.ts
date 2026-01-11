@@ -12,4 +12,9 @@ export default defineConfig({
       "@": root,
     } as AliasOptions,
   },
+  server: {
+    host: true, // or "0.0.0.0"
+    port: 5173,
+    allowedHosts: [".ngrok-free.dev"],
+  },
 });

@@ -3,7 +3,6 @@ import Home from "./pages/Home";
 import Plan from "./pages/Plan";
 import NewDay from "./pages/NewDay";
 import Schedule from "./pages/Schedule";
-import Header from "./components/Header";
 import ChooseCategories from "./pages/ChooseCategories";
 import { useRouteCtx } from "./hooks/useRouteCtx";
 import { useMemo } from "react";
@@ -37,8 +36,7 @@ export default function App() {
         className="h-screen flex flex-col main-container transition-all transition-duration-1000"
         style={{ backgroundImage }}
       >
-        <Header />
-        <main className="flex-grow overflow-hidden">
+        <main className="flex-grow overflow-hidden mt-[125px]">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />

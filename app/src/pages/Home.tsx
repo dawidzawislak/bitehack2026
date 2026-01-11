@@ -143,6 +143,7 @@ export default function Home() {
       buttonNextDisabled={
         homeLocation.latitude === 0 && homeLocation.longitude === 0
       }
+      className="rounded-tr-3xl"
     >
       <div id="home-map" className="h-full w-full"></div>
     </Content>

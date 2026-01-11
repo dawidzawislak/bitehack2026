@@ -74,6 +74,7 @@ export default function NewDay() {
       buttonNextAction={saveDay}
       buttonBack="Back"
       buttonBackAction={() => navigate("/plan")}
+      className="rounded-tr-3xl"
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div>
@@ -141,7 +142,10 @@ export default function NewDay() {
         <div>
           <span className="block mb-1 mt-2 text-xl">Meals</span>
           {["breakfast", "lunch", "dinner", "supper"].map((meal) => (
-            <div key={meal} className="block text-lg flex items-center mb-0.5 pointer-events-none">
+            <div
+              key={meal}
+              className="block text-lg flex items-center mb-0.5 pointer-events-none"
+            >
               <input
                 type="checkbox"
                 className="ml-4 w-4 h-4 pointer-events-auto"

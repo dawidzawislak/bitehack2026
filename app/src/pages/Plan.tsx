@@ -22,6 +22,7 @@ export default function Plan() {
       buttonNextAction={() => navigate("/categories")}
       buttonBack="Back"
       buttonBackAction={() => navigate("/home")}
+      className="rounded-tr-3xl"
     >
       <div className="flex flex-col gap-4">
         {planDays.map((plan, index) => (
