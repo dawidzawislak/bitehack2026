@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TimelineItem from "../components/TimelineItem";
-import { Heading, Section, Button } from "../components/common";
+import { Heading } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
 import DaySelector from "../components/DaySelector";
 import Content from "../components/common/Content";
@@ -51,7 +51,7 @@ export default function Schedule() {
         onNextDay={() => setSelectedDay(selectedDay + 1)}
       />
 
-      <div className="max-w-3xl mx-auto py-6">
+      <div className="max-w-3xl mx-auto pt-4">
         <Heading level={2} className="mb-6 text-center tracking-wider">
           Plan for {formatDate(currentDaySchedule.date)}
         </Heading>
@@ -61,14 +61,14 @@ export default function Schedule() {
           {/* Start point */}
           <div className="relative flex items-start mb-8">
             <div className="relative flex flex-col items-center mr-4">
-              <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white z-10"></div>
+              <div className="w-4 h-4 rounded-full bg-transparent border-2 border-white z-10"></div>
               <div className="w-0.5 flex-1 bg-gray-300 mt-1"></div>
             </div>
             <div className="flex-1">
               <div className="bg-green-100 rounded-lg p-4 shadow-sm border-2 border-green-500">
                 <div className="font-bold text-lg mb-1">🏠 Start</div>
                 {currentDaySchedule.timeline.length > 0 && (
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-sm text-gray-500 mt-2">
                     {currentDaySchedule.timeline[0].scheduled_time} - Start of
                     route
                   </div>
@@ -89,14 +89,14 @@ export default function Schedule() {
           {/* End point */}
           <div className="relative flex items-start mt-4">
             <div className="relative flex flex-col items-center mr-4">
-              <div className="w-0.5 h-6 bg-gray-300 -mt-6"></div>
+              <div className="w-0.5 h-16 bg-gray-300 -mt-16"></div>
               <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white z-10"></div>
             </div>
             <div className="flex-1">
               <div className="bg-red-100 rounded-lg p-4 shadow-sm border-2 border-red-500">
                 <div className="font-bold text-lg mb-1">🏁 Return home</div>
                 {currentDaySchedule.timeline.length > 0 && (
-                  <div className="text-xs text-gray-500 mt-2">
+                  <div className="text-sm text-gray-500 mt-2">
                     {
                       currentDaySchedule.timeline[
                         currentDaySchedule.timeline.length - 1
