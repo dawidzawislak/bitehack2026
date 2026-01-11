@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import TimelineItem from "../components/TimelineItem";
 import { Button, Heading, Modal } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
@@ -10,7 +10,10 @@ import type { TimelineItem as TimelineItemType } from "../types/models";
 export default function Schedule() {
   const { schedule, setBackgroundType } = useRouteCtx();
   const navigate = useNavigate();
-  const [selectedDay, setSelectedDay] = useState(0);
+  const location = useLocation();
+  const [selectedDay, setSelectedDay] = useState(
+    (location.state as { selectedDay?: number })?.selectedDay ?? 0
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
     item: TimelineItemType;
@@ -47,7 +50,7 @@ export default function Schedule() {
     <Content
       header="Route Schedule"
       sidebar={false}
-      buttonNextAction={() => navigate("/map")}
+      buttonNextAction={() => navigate("/map", { state: { selectedDay } })}
       buttonNext="View map"
       buttonBack="Change plan"
       buttonBackAction={() => navigate("/categories")}
