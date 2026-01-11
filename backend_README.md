@@ -18,7 +18,7 @@ This will start three services:
 After services are running, initialize MongoDB with places data:
 
 ```bash
-docker exec -it recommender python init_db.py
+docker exec -it recommender python src/init_db.py
 ```
 
 This will:
@@ -287,7 +287,7 @@ cd recommender
 pip install -r requirements.txt
 export MONGODB_URL=mongodb://localhost:27017
 export MONGODB_DB=places_db
-python init_db.py  # First time only
+python src/init_db.py  # First time only
 uvicorn main:app --reload --port 8001
 ```
 

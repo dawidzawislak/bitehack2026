@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { API } from "../utils/api";
 import { Modal } from "../components/common";
 import { buildRecommendRequest } from "../utils/requestBuilder";
+import { InterestsDict, FoodDict } from "../utils/InterestPageDict";
 
 export default function ChooseCategories() {
   const { 
@@ -93,7 +94,7 @@ export default function ChooseCategories() {
         Preferred place categories:
         <CustomMultiSelect
           options={availablePlaceCategories.map((category) => ({
-            label: category[0].toUpperCase() + category.slice(1),
+            label: (InterestsDict[category[0].toUpperCase() + category.slice(1)] ?? "") + " " + category[0].toUpperCase() + category.slice(1),
             value: category,
           }))}
           value={placeCategories}
@@ -103,7 +104,7 @@ export default function ChooseCategories() {
         Preferred cuisine types:
         <CustomMultiSelect
           options={availableCuisineTypes.map((category) => ({
-            label: snakeCaseToTitleCase(category),
+            label: (FoodDict[snakeCaseToTitleCase(category)] ?? "") + " " + snakeCaseToTitleCase(category),
             value: category,
           }))}
           value={cuisineTypes}
