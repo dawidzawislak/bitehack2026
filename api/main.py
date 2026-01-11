@@ -18,6 +18,7 @@ app.add_middleware(
 
 # Get recommender service URL from environment
 RECOMMENDER_URL = os.getenv("RECOMMENDER_URL", "http://localhost:8001")
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8002")
 
 @app.get("/")
 def health_check():
@@ -107,4 +108,36 @@ async def get_stats():
         raise HTTPException(
             status_code=503,
             detail=f"Could not connect to recommender service: {str(e)}"
+        )
+
+
+@app.post("/api/predict-preferences")
+async def predict_preferences(request: dict):
+    """
+    Proxy endpoint to AI prediction service.
+    Forwards prediction requests to the AI microservice.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{AI_SERVICE_URL}/predict",
+                json=request
+            )
+            response.raise_for_status()
+            return response.json()
+            
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"AI service error: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Could not connect to AI service: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing prediction: {str(e)}"
         )
