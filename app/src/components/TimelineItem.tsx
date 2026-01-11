@@ -4,12 +4,14 @@ interface TimelineItemProps {
   item: TimelineItemType;
   isFirst: boolean;
   isLast: boolean;
+  onClick?: () => void;
 }
 
 export default function TimelineItem({
   item,
   isFirst,
   isLast,
+  onClick,
 }: TimelineItemProps) {
   const isMeal = item.item_type === "meal";
   const data = isMeal ? item.restaurant : item.place;
@@ -64,7 +66,10 @@ export default function TimelineItem({
         )}
 
         {/* Main card */}
-        <div className="bg-gray-200 rounded-lg p-4 shadow-sm">
+        <div 
+          className="bg-gray-200 rounded-lg p-4 shadow-sm cursor-pointer hover:bg-gray-300 transition-colors"
+          onClick={onClick}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium text-sm">
               {formatTime(item.scheduled_time)}

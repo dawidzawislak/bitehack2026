@@ -1,15 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TimelineItem from "../components/TimelineItem";
-import { Button, Heading } from "../components/common";
+import { Button, Heading, Modal } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
 import DaySelector from "../components/DaySelector";
 import Content from "../components/common/Content";
+import type { TimelineItem as TimelineItemType } from "../types/models";
 
 export default function Schedule() {
   const { schedule, setBackgroundType } = useRouteCtx();
   const navigate = useNavigate();
   const [selectedDay, setSelectedDay] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{
+    item: TimelineItemType;
+    index: number;
+  } | null>(null);
 
   useEffect(() => {
     setBackgroundType("default");
@@ -86,6 +92,10 @@ export default function Schedule() {
               item={item}
               isFirst={index === 0}
               isLast={index === currentDaySchedule.timeline.length - 1}
+              onClick={() => {
+                setSelectedItem({ item, index });
+                setModalOpen(true);
+              }}
             />
           ))}
 
@@ -137,6 +147,120 @@ export default function Schedule() {
           </div>
         </div>
       </div>
+
+      {/* Modal for place details */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={
+          selectedItem
+            ? selectedItem.item.item_type === "meal"
+              ? "Meal Stop"
+              : "Attraction"
+            : "Details"
+        }
+      >
+        {selectedItem && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-bold mb-2">
+                {selectedItem.item.item_type === "meal"
+                  ? selectedItem.item.restaurant?.name
+                  : selectedItem.item.place?.name}
+              </h3>
+              <p className="text-gray-600">
+                Stop #{selectedItem.index + 1} of{" "}
+                {currentDaySchedule.timeline.length}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-600">Scheduled Time</div>
+                <div className="font-semibold">
+                  {selectedItem.item.scheduled_time}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">End Time</div>
+                <div className="font-semibold">
+                  {selectedItem.item.end_time}
+                </div>
+              </div>
+            </div>
+
+            {selectedItem.item.item_type === "meal" &&
+              selectedItem.item.restaurant && (
+                <>
+                  <div>
+                    <div className="text-sm text-gray-600">Meal Type</div>
+                    <div className="font-semibold capitalize">
+                      {selectedItem.item.restaurant.meal_type}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Address</div>
+                    <div>
+                      {selectedItem.item.restaurant.formatted_address || "N/A"}
+                    </div>
+                  </div>
+                  {selectedItem.item.restaurant.price_level && (
+                    <div>
+                      <div className="text-sm text-gray-600">Price Level</div>
+                      <div>
+                        {"$".repeat(selectedItem.item.restaurant.price_level)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+            {selectedItem.item.item_type === "attraction" &&
+              selectedItem.item.place && (
+                <>
+                  <div>
+                    <div className="text-sm text-gray-600">Categories</div>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selectedItem.item.place.category.map((cat) => (
+                        <span
+                          key={cat}
+                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                        >
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Address</div>
+                    <div>
+                      {selectedItem.item.place.formatted_address || "N/A"}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">
+                        Visit Duration
+                      </div>
+                      <div className="font-semibold">
+                        {selectedItem.item.place.visit_duration_min} min
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+            <div>
+              <div className="text-sm text-gray-600">Opening Hours</div>
+              <div className="text-sm">
+                {selectedItem.item.item_type === "meal"
+                  ? selectedItem.item.restaurant?.opening_hours || "N/A"
+                  : selectedItem.item.place?.opening_hours || "N/A"}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </Content>
   );
 }
