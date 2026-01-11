@@ -37,7 +37,16 @@ export default function ChooseCategories() {
     fetch(`http://${HOST_IP}:8000/api/categories`)
       .then((res) => res.json())
       .then((data) => {
-        setAvailablePlaceCategories(data.categories);
+        // Filter out unwanted categories
+        const filteredCategories = data.categories.filter((cat: string) => {
+          return !cat.startsWith("wheelchair") && 
+                 !cat.startsWith("no_fee") && 
+                 !cat.startsWith("no_access") && 
+                 !cat.startsWith("fee") && 
+                 !cat.startsWith("access") && 
+                 !cat.startsWith("access_limited");
+        });
+        setAvailablePlaceCategories(filteredCategories);
       });
 
     fetch(`http://${HOST_IP}:8000/api/food-categories`)
@@ -108,10 +117,13 @@ export default function ChooseCategories() {
       >
         Preferred place categories:
         <CustomMultiSelect
-          options={availablePlaceCategories.map((category) => ({
-            label: formatCategoryLabel(category),
-            value: category,
-          }))}
+          options={availablePlaceCategories.map((category) => {
+            const formattedLabel = formatCategoryLabel(category);
+            return {
+              label: (InterestsDict[formattedLabel] ?? "") + " " + formattedLabel,
+              value: category,
+            };
+          })}
           value={placeCategories}
           onChange={(newCategories) => setPlaceCategories(newCategories)}
         />
