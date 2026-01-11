@@ -10,15 +10,17 @@ import { buildRecommendRequest } from "../utils/requestBuilder";
 import { InterestsDict, FoodDict } from "../utils/InterestPageDict";
 
 export default function ChooseCategories() {
-  const { 
-    placeCategories, 
-    setPlaceCategories, 
-    cuisineTypes, 
+  const {
+    placeCategories,
+    setPlaceCategories,
+    cuisineTypes,
     setCuisineTypes,
     homeLocation,
     planDays,
     setSchedule,
+    setBackgroundType,
   } = useRouteCtx();
+
   const [availablePlaceCategories, setAvailablePlaceCategories] = useState<
     string[]
   >([]);
@@ -30,6 +32,7 @@ export default function ChooseCategories() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setBackgroundType("categories");
     fetch("http://localhost:8000/api/categories")
       .then((res) => res.json())
       .then((data) => {
@@ -44,8 +47,8 @@ export default function ChooseCategories() {
             new Set(
               data.food_categories
                 .map((cat: string) => cat.split("."))
-                .filter((cat : string[]) => cat.length > 1)
-                .map((cat : string[]) => cat[cat.length - 1])
+                .filter((cat: string[]) => cat.length > 1)
+                .map((cat: string[]) => cat[cat.length - 1])
             )
           )
         );
@@ -67,10 +70,10 @@ export default function ChooseCategories() {
 
       // Call the API
       const response = await API.recommend.create(request);
-      
+
       // Update the schedule in context
       setSchedule(response.schedule);
-      
+
       // Navigate to schedule page
       navigate("/schedule");
     } catch (err) {
@@ -116,15 +119,17 @@ export default function ChooseCategories() {
           </div>
         )}
       </Content>
-      
+
       {/* Loading Modal */}
       <Modal isOpen={isGenerating} onClose={() => {}}>
         <div className="flex flex-col items-center justify-center p-8">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-500 mb-4"></div>
-          <h2 className="text-2xl font-bold mb-2">Creating Your Perfect Trip</h2>
+          <h2 className="text-2xl font-bold mb-2">
+            Creating Your Perfect Trip
+          </h2>
           <p className="text-gray-600 text-center">
-            Our AI is analyzing thousands of attractions and restaurants to create
-            the perfect itinerary for you...
+            Our AI is analyzing thousands of attractions and restaurants to
+            create the perfect itinerary for you...
           </p>
         </div>
       </Modal>

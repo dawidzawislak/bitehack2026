@@ -23,7 +23,7 @@ export default function Content({
 }) {
   return (
     <div className="flex h-full">
-      <Section className="flex-grow flex flex-col overflow-hidden">
+      <Section className="flex-grow flex flex-col overflow-hidden bg-white rounded-tr-3xl">
         <Heading level={1}>{header}</Heading>
         <hr className="my-4" />
         <div className="flex-grow overflow-y-auto">{children}</div>
@@ -39,7 +39,12 @@ export default function Content({
             </Button>
           )}
           {buttonNext && (
-            <Button fullWidth className="mt-4" onClick={buttonNextAction} disabled={buttonNextDisabled}>
+            <Button
+              fullWidth
+              className="mt-4"
+              onClick={buttonNextAction}
+              disabled={buttonNextDisabled}
+            >
               {buttonNext}
             </Button>
           )}

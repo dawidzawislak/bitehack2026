@@ -6,3 +6,14 @@ body,
 input {
   color: #333;
 }
+
+.main-container {
+  background-size: 98% auto;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: top center;
+}
+
+html {
+  background-color: #e6e6e6;
+}
