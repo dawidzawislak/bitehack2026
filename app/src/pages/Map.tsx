@@ -3,13 +3,9 @@ import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useRouteCtx } from "../hooks/useRouteCtx";
-import { Button, Modal, Heading } from "../components/common";
+import { Modal } from "../components/common";
 import DaySelector from "../components/DaySelector";
-import type {
-  TimelineItem,
-  TimelinePlace,
-  TimelineRestaurant,
-} from "../types/models";
+import type { TimelineItem } from "../types/models";
 import Content from "../components/common/Content";
 
 // Fix for default marker icon in Leaflet

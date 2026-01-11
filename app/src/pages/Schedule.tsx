@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TimelineItem from "../components/TimelineItem";
-import { Heading } from "../components/common";
+import { Button, Heading } from "../components/common";
 import { useRouteCtx } from "../hooks/useRouteCtx";
 import DaySelector from "../components/DaySelector";
 import Content from "../components/common/Content";
@@ -17,8 +17,11 @@ export default function Schedule() {
 
   if (schedule.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-center flex-col gap-4 p-4">
         <div className="text-xl text-gray-600">No scheduled days</div>
+        <Button onClick={() => navigate("/home")} fullWidth variant="primary">
+          Start planning
+        </Button>
       </div>
     );
   }
